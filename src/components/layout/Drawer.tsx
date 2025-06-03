@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './Drawer.module.css';
 import logo from '../../assets/images/forela-logo.png';
+import pencilLine from '../../assets/images/pencil-line.png';
 import {
   User,
   Settings as SettingsIcon,
@@ -19,6 +20,7 @@ import {
   Plus
 } from 'lucide-react';
 import { useBottomNav } from '../../context/BottomNavContext';
+import { useNavigate } from 'react-router-dom';
 
 interface DrawerNavLink {
   label: string;
@@ -34,27 +36,28 @@ interface DrawerProps {
 
 export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose }) => {
   const { shortcuts, addShortcut, removeShortcut } = useBottomNav();
+  const navigate = useNavigate();
 
   // Top section (no plus/X)
   const topLinks: DrawerNavLink[] = [
-    { label: 'My Profile', icon: <User size={20} />, onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Settings', icon: <SettingsIcon size={20} />, onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Labs', icon: <FlaskConical size={20} />, onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Help', icon: <HelpCircle size={20} />, onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Refer a Friend', icon: <Send size={20} />, onClick: () => { onClose(); window.location.pathname = '/'; } },
+    { label: 'My Profile', icon: <User size={20} />, onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Settings', icon: <SettingsIcon size={20} />, onClick: () => { onClose(); navigate('/settings'); } },
+    { label: 'Labs', icon: <FlaskConical size={20} />, onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Help', icon: <HelpCircle size={20} />, onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Refer a Friend', icon: <Send size={20} />, onClick: () => { onClose(); navigate('/'); } },
   ];
 
   // Bottom section (with plus/X)
   const bottomLinks: DrawerNavLink[] = [
-    { label: 'Care Plan', icon: <Crown size={20} />, shortcutKey: 'careplan', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Journal', icon: <BookOpen size={20} />, shortcutKey: 'journal', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Companion', icon: <Handshake size={20} />, shortcutKey: 'companion', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Symptoms', icon: <FolderHeart size={20} />, shortcutKey: 'symptoms', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Trends', icon: <LineChart size={20} />, shortcutKey: 'trends', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Reports', icon: <FileText size={20} />, shortcutKey: 'reports', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Medical History', icon: <BriefcaseMedical size={20} />, shortcutKey: 'medicalhistory', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Integrations', icon: <Link2 size={20} />, shortcutKey: 'integrations', onClick: () => { onClose(); window.location.pathname = '/'; } },
-    { label: 'Menu Scan', icon: <Scan size={20} />, shortcutKey: 'menuscan', onClick: () => { onClose(); window.location.pathname = '/'; } },
+    { label: 'Care Plan', icon: <Crown size={20} />, shortcutKey: 'careplan', onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Journal', icon: <img src={pencilLine} alt="Journal" style={{ width: 20, height: 20, display: 'block' }} />, shortcutKey: 'journal', onClick: () => { onClose(); navigate('/journal'); } },
+    { label: 'Companion', icon: <Handshake size={20} />, shortcutKey: 'companion', onClick: () => { onClose(); navigate('/companion'); } },
+    { label: 'Symptoms', icon: <FolderHeart size={20} />, shortcutKey: 'symptoms', onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Trends', icon: <LineChart size={20} />, shortcutKey: 'trends', onClick: () => { onClose(); navigate('/trends'); } },
+    { label: 'Reports', icon: <FileText size={20} />, shortcutKey: 'reports', onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Medical History', icon: <BriefcaseMedical size={20} />, shortcutKey: 'medicalhistory', onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Integrations', icon: <Link2 size={20} />, shortcutKey: 'integrations', onClick: () => { onClose(); navigate('/'); } },
+    { label: 'Menu Scan', icon: <Scan size={20} />, shortcutKey: 'menuscan', onClick: () => { onClose(); navigate('/'); } },
   ];
 
   return (

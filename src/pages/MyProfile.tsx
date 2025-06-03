@@ -6,6 +6,8 @@ import checkboxSelected from '../assets/images/Checkbox-selected.png';
 import checkboxUnselected from '../assets/images/Checkbox.png';
 import repeatReplaceIcon from '../assets/images/repeat-replace.png';
 import ActivityOverlay from '../components/shared/ActivityOverlay';
+import ReplaceOverlay, { SectionReplaceOverlay } from '../components/shared/ReplaceOverlay';
+import { useNavigate } from 'react-router-dom';
 
 // Import specific images for each activity
 import coffeeImg from '../assets/images/coffee.png';
@@ -195,6 +197,10 @@ const Accordion: React.FC<{
   const [isCompleted, setIsCompleted] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [replaceTarget, setReplaceTarget] = useState<Activity | null>(null);
+  const [sectionReplaceOpen, setSectionReplaceOpen] = useState(false);
+  const [sectionReplaceTarget, setSectionReplaceTarget] = useState<Activity | null>(null);
 
   // If this is the Sleep accordion, do not show checkboxes or percent completed
   const isSleep = title === 'Sleep';
@@ -314,7 +320,7 @@ const Accordion: React.FC<{
                   key={activity.id} 
                   style={{ 
                     display: 'flex', 
-                    alignItems: 'flex-start', 
+                    alignItems: 'center', 
                     marginBottom: i === activities.length - 1 ? 0 : '1.5rem',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
@@ -323,7 +329,17 @@ const Accordion: React.FC<{
                     transition: 'background 0.4s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s',
                     cursor: 'pointer',
                   }}
-                  onClick={() => handleActivityClick(activity)}
+                  onClick={(e) => {
+                    // Only open overlay if the click is not on the checkbox or repeat button
+                    const target = e.target as HTMLElement;
+                    if (
+                      target.closest('button[data-role="activity-checkbox"]') ||
+                      target.closest('button[data-role="activity-repeat"]')
+                    ) {
+                      return;
+                    }
+                    handleActivityClick(activity);
+                  }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.15)';
                   }}
@@ -344,87 +360,103 @@ const Accordion: React.FC<{
                       border: '2px solid rgba(0,0,0,0.1)'
                     }} 
                   />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                     <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'space-between',
-                      marginBottom: '0.5rem'
+                      fontWeight: 600, 
+                      fontSize: '1rem', 
+                      color: '#311D00',
+                      marginBottom: 2,
+                      fontFamily: 'Inter, Arial, Helvetica, sans-serif',
                     }}>
-                      <div style={{ fontWeight: 600, fontSize: '1rem', color: '#311D00' }}>
-                        {activity.time}
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                        {!isSleep && (
-                          <button
-                            onClick={() => toggleActivity(activity.id)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              borderRadius: '4px',
-                              width: 32,
-                              height: 32,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              outline: 'none',
-                              boxShadow: 'none',
-                            }}
-                            title={completed ? "Mark as incomplete" : "Mark as complete"}
-                            tabIndex={0}
-                          >
-                            <img 
-                              src={completed ? checkboxSelected : checkboxUnselected} 
-                              alt={completed ? "Completed" : "Not completed"} 
-                              style={{ width: 20, height: 20 }} 
-                            />
-                          </button>
-                        )}
-                        <button
-                          style={{
-                            background: 'transparent',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: 32,
-                            height: 32,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            outline: 'none',
-                            boxShadow: 'none',
-                          }}
-                          title="Repeating activity"
-                          tabIndex={0}
-                        >
-                          <img 
-                            src={repeatReplaceIcon} 
-                            alt="Repeat" 
-                            style={{ width: 20, height: 20 }} 
-                          />
-                        </button>
-                      </div>
-                    </div>
-                    <div style={{ fontWeight: 700, fontSize: '1.08rem', color: '#311D00', fontFamily: 'var(--font-serif)', marginBottom: 2 }}>
-                      {activity.title}
+                      {activity.time}
                     </div>
                     <div style={{
-                      fontSize: '0.95rem',
+                      fontFamily: 'Inter, Arial, Helvetica, sans-serif',
+                      fontWeight: 700,
+                      fontSize: '1.25rem',
+                      color: 'var(--color-text-main)',
+                      marginBottom: 2,
+                      marginLeft: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}>{activity.title}</div>
+                    <div style={{
+                      fontFamily: 'Inter, Arial, Helvetica, sans-serif',
+                      fontWeight: 400,
+                      fontSize: 14,
+                      color: '#A36456',
+                      margin: 0,
+                      marginBottom: 0,
                       opacity: 0.95,
-                      lineHeight: 1.4,
-                      color: '#311D00',
-                      maxHeight: 40,
-                      overflow: 'hidden',
-                      position: 'relative',
-                    }}>
-                      <span style={{
-                        display: 'inline-block',
-                        WebkitMaskImage: 'linear-gradient(180deg, #000 60%, transparent 100%)',
-                        maskImage: 'linear-gradient(180deg, #000 60%, transparent 100%)',
-                        fontFamily: 'inherit',
-                      }}>{activity.desc}</span>
-                    </div>
+                    }}>{activity.desc || 'Low-FODMAP, dairy-free, and flavorful without irritants.'}</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', marginLeft: 12 }}>
+                    {!isSleep && (
+                      <button
+                        data-role="activity-checkbox"
+                        onClick={() => {
+                          toggleActivity(activity.id);
+                          if (overlayActivity && overlayActivity.id === activity.id) {
+                            setIsCompleted(!activityStates[activity.id]);
+                          }
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          width: 32,
+                          height: 32,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          boxShadow: 'none',
+                        }}
+                        title={completed ? "Mark as incomplete" : "Mark as complete"}
+                        tabIndex={0}
+                      >
+                        <img 
+                          src={completed ? checkboxSelected : checkboxUnselected} 
+                          alt={completed ? "Completed" : "Not completed"} 
+                          style={{ width: 20, height: 20 }} 
+                        />
+                      </button>
+                    )}
+                    <button
+                      data-role="activity-repeat"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (title === 'Meals') {
+                          setReplaceTarget(activity);
+                          setReplaceOpen(true);
+                        } else if (['Sleep', 'Movement', 'Mental Health'].includes(title)) {
+                          setSectionReplaceTarget(activity);
+                          setSectionReplaceOpen(true);
+                        }
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        outline: 'none',
+                        boxShadow: 'none',
+                      }}
+                      title={title === 'Meals' ? "Replace meal" : `Replace ${title.toLowerCase()} activity`}
+                      tabIndex={0}
+                    >
+                      <img 
+                        src={repeatReplaceIcon} 
+                        alt="Replace" 
+                        style={{ width: 20, height: 20 }} 
+                      />
+                    </button>
                   </div>
                 </div>
               );
@@ -508,6 +540,35 @@ const Accordion: React.FC<{
           </div>
         )}
       </ActivityOverlay>
+      {/* Replace Overlay for Meals */}
+      {title === 'Meals' && replaceTarget && (
+        <ReplaceOverlay
+          open={replaceOpen}
+          onClose={() => setReplaceOpen(false)}
+          currentMeal={replaceTarget}
+          mealOptions={activities.map(a => ({ id: a.id, image: a.image, title: a.title }))}
+          onReplace={(meal) => {
+            // Replace the meal in the activities array (implement logic as needed)
+            setReplaceOpen(false);
+          }}
+          headerColor={color}
+        />
+      )}
+      {/* Section Replace Overlay for Sleep, Movement, Mental Health */}
+      {['Sleep', 'Movement', 'Mental Health'].includes(title) && sectionReplaceTarget && (
+        <SectionReplaceOverlay
+          open={sectionReplaceOpen}
+          onClose={() => setSectionReplaceOpen(false)}
+          currentActivity={{ id: sectionReplaceTarget.id, title: sectionReplaceTarget.title, image: sectionReplaceTarget.image }}
+          activityOptions={activities.map(a => ({ id: a.id, title: a.title, image: a.image }))}
+          onReplace={(activity, time) => {
+            // Replace the activity in the activities array (implement logic as needed)
+            setSectionReplaceOpen(false);
+          }}
+          headerColor={color}
+          sectionLabel={title.toLowerCase()}
+        />
+      )}
     </div>
   );
 };
@@ -523,6 +584,7 @@ const getGreeting = () => {
 
 const MyProfile: React.FC = () => {
   const greeting = getGreeting();
+  const navigate = useNavigate();
   return (
     <div style={{ padding: '1.5rem 0', background: '#EAE9E5' }}>
       {/* Greeting and summary */}
@@ -533,7 +595,7 @@ const MyProfile: React.FC = () => {
         <p style={{ fontFamily: 'Inter, Arial, Helvetica, sans-serif', fontWeight: 400, lineHeight: '100%', letterSpacing: 0, color: 'var(--color-text-main)', fontSize: '1rem', marginBottom: '1.5rem' }}>
           You've made meaningful progress over the past six weeks — with a 60% improvement in pain, bladder urgency, and constipation. Your care is working and we're here to continue supporting you. Keep listening to your body.
         </p>
-        <button className="journal-btn">
+        <button className="journal-btn" onClick={() => navigate('/journal')}>
           Continue to Journal
         </button>
       </section>

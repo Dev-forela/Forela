@@ -30,8 +30,8 @@ const modalStyle: React.CSSProperties = {
   background: '#fff',
   borderRadius: '1rem',
   boxShadow: '0 8px 32px rgba(49,29,0,0.18)',
-  maxWidth: 400,
-  width: '95vw',
+  maxWidth: 520,
+  width: '98vw',
   maxHeight: '95vh',
   overflowY: 'auto',
   position: 'relative',
@@ -128,8 +128,8 @@ const ActivityOverlay: React.FC<ActivityOverlayProps> = ({
           />
           {/* Title & Subtitle */}
           <div style={{
-            width: 169,
-            height: 75,
+            minWidth: 0,
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -137,24 +137,28 @@ const ActivityOverlay: React.FC<ActivityOverlayProps> = ({
             marginLeft: 0,
             marginRight: 0,
           }}>
+            <h3 style={{
+              display: 'flex',
+              alignItems: 'center',
+              fontFamily: 'Inter, Arial, Helvetica, sans-serif',
+              fontWeight: 700,
+              fontSize: '1.25rem',
+              color: 'var(--color-text-main)',
+              marginBottom: '1rem',
+              marginLeft: 0,
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+            }}>{activity?.title}</h3>
             <div style={{
-              fontFamily: 'Neue Haas Grotesk Text Pro, Inter, Arial, sans-serif',
-              fontWeight: 500,
-              fontSize: 12,
-              lineHeight: '100%',
-              letterSpacing: 0,
-              color: '#311D00',
-              margin: 0,
-              marginBottom: 6,
-            }}>{activity?.title}</div>
-            <div style={{
-              fontFamily: 'var(--font-sans)',
+              fontFamily: 'Inter, Arial, Helvetica, sans-serif',
               fontWeight: 400,
               fontSize: 14,
               color: '#A36456',
               margin: 0,
               marginBottom: 0,
               opacity: 0.95,
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
             }}>{activity?.subtitle || 'Low-FODMAP, dairy-free, and flavorful without irritants.'}</div>
           </div>
           {/* Bookmark & X */}
@@ -178,21 +182,73 @@ const ActivityOverlay: React.FC<ActivityOverlayProps> = ({
         </div>
         {/* Divider line */}
         <div style={{
-          width: 322,
+          width: 'calc(100% - 48px)', // 24px padding on each side
           height: 1,
           background: '#311D00',
           opacity: 0.2,
-          margin: '0 auto 1.5rem auto',
+          margin: '12px auto 1.5rem auto',
         }} />
         {/* Main content */}
-        <div style={{ padding: '0 1.5rem 2rem 1.5rem' }}>{
-          React.Children.map(children, child => {
-            if (React.isValidElement(child) && child.type === 'img') {
-              return null;
-            }
-            return child;
-          })
-        }</div>
+        <div style={{ padding: '0 1.5rem 2rem 1.5rem' }}>
+          <div style={{ fontFamily: 'Inter, Arial, Helvetica, sans-serif', fontSize: 16, color: '#311D00', lineHeight: 1.6 }}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>Ingredients</div>
+            <div style={{ fontWeight: 500, marginBottom: 2 }}>For the Soup:</div>
+            <ul style={{ margin: 0, paddingLeft: 18, marginBottom: 8 }}>
+              <li>1 small head of cauliflower, cut into florets</li>
+              <li>1 medium carrot, sliced</li>
+              <li>1 small parsnip (optional, for sweetness), peeled & chopped</li>
+              <li>2 tablespoons olive oil</li>
+              <li>½ teaspoon dried thyme</li>
+              <li>½ teaspoon ground turmeric (optional, anti-inflammatory)</li>
+              <li>2½ cups low-sodium vegetable broth (IC-friendly, no onion/garlic)</li>
+              <li>½ cup unsweetened coconut milk (from a can or carton — IC-safe)</li>
+              <li>Sea salt & black pepper (if tolerated), to taste</li>
+            </ul>
+            <div style={{ fontWeight: 500, marginBottom: 2 }}>For Topping:</div>
+            <ul style={{ margin: 0, paddingLeft: 18, marginBottom: 12 }}>
+              <li>2 tablespoons coconut milk (for swirl)</li>
+              <li>Microgreens (e.g., pea shoots, broccoli sprouts, or radish microgreens — IC-safe in small amounts)</li>
+              <li>Optional: a few pink peppercorns or chive oil for garnish</li>
+            </ul>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Instructions</div>
+            <ol style={{ margin: 0, paddingLeft: 18, marginBottom: 12 }}>
+              <li><b>Roast the Veggies</b>
+                <ul>
+                  <li>Preheat oven to 400°F (200°C).</li>
+                  <li>Toss cauliflower, carrot, and parsnip with olive oil, thyme, turmeric, and sea salt.</li>
+                  <li>Roast for 25–30 minutes, until golden and tender.</li>
+                </ul>
+              </li>
+              <li><b>Blend the Soup</b>
+                <ul>
+                  <li>Transfer roasted vegetables to a blender or use an immersion blender.</li>
+                  <li>Add broth and ½ cup coconut milk, and blend until smooth.</li>
+                  <li>If needed, add a bit more broth for a thinner texture.</li>
+                </ul>
+              </li>
+              <li><b>Warm and Adjust</b>
+                <ul>
+                  <li>Pour blended soup into a pot and warm over medium-low heat.</li>
+                  <li>Taste and adjust salt or herbs.</li>
+                </ul>
+              </li>
+              <li><b>Serve</b>
+                <ul>
+                  <li>Ladle into bowls.</li>
+                  <li>Swirl a spoonful of coconut milk on top.</li>
+                  <li>Garnish with microgreens and optional pink peppercorns or herbs.</li>
+                </ul>
+              </li>
+            </ol>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Why It Works</div>
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              <li>No onions, garlic, or acidic ingredients.</li>
+              <li>Roasting adds natural sweetness without needing extra sugar.</li>
+              <li>Coconut milk adds creaminess without dairy irritation.</li>
+              <li>Topped with fresh micro greens for texture and nutrients.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );

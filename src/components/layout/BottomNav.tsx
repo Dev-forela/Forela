@@ -12,15 +12,15 @@ import {
   Link2,
   Scan,
   Edit3,
-  BarChart2,
   Settings as SettingsIcon
 } from 'lucide-react';
 import styles from './BottomNav.module.css';
 import { useBottomNav } from '../../context/BottomNavContext';
+import pencilLine from '../../assets/images/pencil-line.png';
 
 const iconMap: Record<string, React.ReactNode> = {
   careplan: <Crown size={24} />,
-  journal: <BookOpen size={24} />,
+  journal: <img src={pencilLine} alt="Journal" style={{ width: 24, height: 24, display: 'block' }} />,
   companion: <Handshake size={24} />,
   symptoms: <FolderHeart size={24} />,
   trends: <LineChart size={24} />,
@@ -28,22 +28,33 @@ const iconMap: Record<string, React.ReactNode> = {
   medicalhistory: <BriefcaseMedical size={24} />,
   integrations: <Link2 size={24} />,
   menuscan: <Scan size={24} />,
-  analytics: <BarChart2 size={24} />,
   settings: <SettingsIcon size={24} />,
 };
 
 const routeMap: Record<string, string> = {
-  careplan: '/careplan',
+  careplan: '/',
   journal: '/journal',
   companion: '/companion',
-  symptoms: '/symptoms',
+  symptoms: '/',
   trends: '/trends',
-  reports: '/reports',
-  medicalhistory: '/medicalhistory',
-  integrations: '/integrations',
-  menuscan: '/menuscan',
-  analytics: '/analytics',
+  reports: '/',
+  medicalhistory: '/',
+  integrations: '/',
+  menuscan: '/',
   settings: '/settings',
+};
+
+const labelMap: Record<string, string> = {
+  careplan: 'Care Plan',
+  journal: 'Journal',
+  companion: 'Companion',
+  symptoms: 'Symptoms',
+  trends: 'Trends',
+  reports: 'Reports',
+  medicalhistory: 'Medical History',
+  integrations: 'Integrations',
+  menuscan: 'Menu Scan',
+  settings: 'Settings',
 };
 
 const BottomNav: React.FC = () => {
@@ -51,11 +62,11 @@ const BottomNav: React.FC = () => {
   const location = useLocation();
   const { shortcuts } = useBottomNav();
 
-  // Always show Home first
+  // Always show Home first, then user's selected shortcuts
   const navItems = [
     { label: 'My Profile', icon: <Home size={24} />, route: '/' },
     ...shortcuts.map((key) => ({
-      label: key.charAt(0).toUpperCase() + key.slice(1),
+      label: labelMap[key] || key.charAt(0).toUpperCase() + key.slice(1),
       icon: iconMap[key],
       route: routeMap[key],
     })),
