@@ -1,0 +1,73 @@
+.layout {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  font-family: var(--font-sans);
+  color: var(--color-text-main);
+}
+
+.container {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding-bottom: 6rem;
+}
+
+.header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: transparent;
+  color: var(--color-text-main);
+  border-bottom: none;
+  box-shadow: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  outline: none;
+  box-shadow: none;
+}
+.menuButton:hover, .menuButton:active, .menuButton:focus {
+  background: none;
+  outline: none;
+  box-shadow: none;
+}
+.menuButton svg line {
+  stroke: var(--color-nav);
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.main {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+@media (min-width: 768px) {
+  .header {
+    padding: var(--spacing-lg) var(--spacing-xl);
+  }
+  
+  .main {
+    padding: var(--spacing-lg) var(--spacing-xl);
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+} 
