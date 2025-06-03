@@ -30,6 +30,7 @@ const mealsData = {
       id: 1,
       time: '7am', 
       image: coffeeImg, 
+      title: 'Tylers Coffee with Collagen',
       desc: 'One cup of Tylers Coffee Acid Free with one scoop of Needed Prenatal Collagen Protein',
       completed: true,
       repeating: false
@@ -38,6 +39,7 @@ const mealsData = {
       id: 2,
       time: '8am', 
       image: oatmealImg, 
+      title: 'High Protein Oatmeal',
       desc: 'High Protein Oatmeal with Almonds and Blueberries',
       completed: false,
       repeating: true
@@ -46,6 +48,7 @@ const mealsData = {
       id: 3,
       time: '12pm', 
       image: rainbowImg, 
+      title: 'Rainbow Bowl',
       desc: 'Rainbow Bowl with Olive Oil and Sea Salt',
       completed: false,
       repeating: false
@@ -54,6 +57,7 @@ const mealsData = {
       id: 4,
       time: '3pm', 
       image: appleImg, 
+      title: 'Apple and Peanut Butter',
       desc: 'Apple and Peanut Butter',
       completed: false,
       repeating: true
@@ -62,6 +66,7 @@ const mealsData = {
       id: 5,
       time: '6pm', 
       image: greengoddessImg, 
+      title: 'Green Goddess Soup',
       desc: 'Green Goddess Soup',
       completed: false,
       repeating: false
@@ -70,6 +75,7 @@ const mealsData = {
       id: 6,
       time: '8pm', 
       image: ramenImg, 
+      title: 'Golden Milk',
       desc: 'Golden Milk',
       completed: false,
       repeating: true
@@ -86,6 +92,7 @@ const movementData = {
       id: 7,
       time: '7:30am', 
       image: yogaImg, 
+      title: 'Gentle Yoga or Pilates',
       desc: '20min Gentle Yoga or Pilates',
       completed: true,
       repeating: true
@@ -94,6 +101,7 @@ const movementData = {
       id: 8,
       time: '12pm', 
       image: pelvicFloorImg, 
+      title: 'Pelvic Floor Lengthening',
       desc: '3min Pelvic Floor Lengthening, Seated',
       completed: false,
       repeating: true
@@ -102,6 +110,7 @@ const movementData = {
       id: 9,
       time: '3pm', 
       image: pelvicFloorImg, 
+      title: 'Pelvic Floor Lengthening',
       desc: '3min Pelvic Floor Lengthening, Seated',
       completed: false,
       repeating: true
@@ -118,6 +127,7 @@ const mentalData = {
       id: 10,
       time: '7:50am', 
       image: meditateImg, 
+      title: 'Pelvic Floor Relaxation Meditation',
       desc: '10min Pelvic Floor Relaxation Meditation',
       completed: false,
       repeating: true
@@ -126,6 +136,7 @@ const mentalData = {
       id: 11,
       time: '5pm', 
       image: somaticImg, 
+      title: 'Somatic Trauma Healing',
       desc: '20min Somatic Trauma Healing',
       completed: false,
       repeating: false
@@ -142,6 +153,7 @@ const sleepData = {
       id: 12,
       time: '30-60min before bed', 
       image: bathImg, 
+      title: 'Warm Bath',
       desc: 'A warm bath before bedtime can help relax your muscles and soothe your pelvic area, promoting a more restful night\'s sleep.',
       completed: false,
       repeating: false
@@ -150,6 +162,7 @@ const sleepData = {
       id: 13,
       time: 'Bedtime', 
       image: bedImg, 
+      title: 'Early Bedtime',
       desc: 'Try heading to bed around 9pm tonight to support recovery from last night\'s limited sleep. Giving your body and mind this extra rest can help you feel more restored for tomorrow.',
       completed: false,
       repeating: false
@@ -157,14 +170,15 @@ const sleepData = {
   ],
 };
 
-interface Activity {
+type Activity = {
   id: number;
   time: string;
   image: string;
+  title: string;
   desc: string;
   completed: boolean;
   repeating: boolean;
-}
+};
 
 const Accordion: React.FC<{
   title: string;
@@ -197,7 +211,13 @@ const Accordion: React.FC<{
   }, [open, activityStates]);
 
   const toggleActivity = (id: number) => {
-    setActivityStates(prev => ({ ...prev, [id]: !prev[id] }));
+    setActivityStates(prev => {
+      const updated = { ...prev, [id]: !prev[id] };
+      if (overlayActivity && overlayActivity.id === id) {
+        setIsCompleted(updated[id]);
+      }
+      return updated;
+    });
   };
 
   const handleActivityClick = (activity: Activity) => {
@@ -209,7 +229,12 @@ const Accordion: React.FC<{
   const handleOverlayClose = () => setOverlayActivity(null);
   const handleBookmarkToggle = () => setIsBookmarked((b) => !b);
   const handleReplace = () => alert('Replace action!');
-  const handleCompleteToggle = () => setIsCompleted((c) => !c);
+  const handleCompleteToggle = () => {
+    if (overlayActivity) {
+      setActivityStates(prev => ({ ...prev, [overlayActivity.id]: !prev[overlayActivity.id] }));
+      setIsCompleted(c => !c);
+    }
+  };
 
   return (
     <div style={{ marginBottom: '1.25rem' }}>
@@ -380,6 +405,9 @@ const Accordion: React.FC<{
                           />
                         </button>
                       </div>
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: '1.08rem', color: '#311D00', fontFamily: 'var(--font-serif)', marginBottom: 2 }}>
+                      {activity.title}
                     </div>
                     <div style={{
                       fontSize: '0.95rem',
