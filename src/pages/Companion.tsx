@@ -22,6 +22,7 @@ const Companion: React.FC = () => {
   const [showPreviousChats, setShowPreviousChats] = useState(false);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentChatId, setCurrentChatId] = useState('current');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -95,8 +96,8 @@ const Companion: React.FC = () => {
     return `Thank you for sharing that with me. I can see from your journal entries that you're really committed to understanding and supporting your healing journey. You've been so thoughtful about tracking your activities, mood, and body responses. What would feel most supportive to explore together right now?`;
   };
 
-  const handleSendMessage = () => {
-    if (!currentMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!currentMessage.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -107,19 +108,55 @@ const Companion: React.FC = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageToSend = currentMessage;
     setCurrentMessage('');
+    setIsLoading(true);
 
-    // Simulate AI response delay
-    setTimeout(() => {
+    try {
+      // Use environment variable for API URL or fallback to production
+      const API_URL = import.meta.env.VITE_API_URL || 'https://forela.vercel.app/api/chat';
+      
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          message: messageToSend,
+          context: `User has been tracking activities including yoga, meditation, gentle movement, mindful eating, and managing autoimmune symptoms. Recent entries show focus on building supportive routines and managing flare days.`
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+
       const companionResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: generateCompanionResponse(currentMessage),
+        content: data.reply || 'I apologize, but I seem to be having trouble responding right now. Please try again.',
         sender: 'companion',
         timestamp: new Date(),
         type: 'text'
       };
+
       setMessages(prev => [...prev, companionResponse]);
-    }, 1500);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      
+      // Fallback to mock response if API fails
+      const fallbackResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: generateCompanionResponse(messageToSend),
+        sender: 'companion',
+        timestamp: new Date(),
+        type: 'text'
+      };
+      setMessages(prev => [...prev, fallbackResponse]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -355,6 +392,58 @@ const Companion: React.FC = () => {
             </div>
           </div>
         ))}
+        
+        {/* Loading indicator */}
+        {isLoading && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'flex-start',
+            marginBottom: 16
+          }}>
+            <div style={{
+              maxWidth: '80%',
+              padding: '12px 16px',
+              borderRadius: 16,
+              background: '#fff',
+              color: '#311D00',
+              boxShadow: '0 2px 8px rgba(49,29,0,0.1)',
+              fontSize: 15,
+              lineHeight: 1.4,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              <div style={{
+                display: 'flex',
+                gap: 4
+              }}>
+                <div style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#A36456',
+                  animation: 'dot1 1.4s infinite ease-in-out'
+                }} />
+                <div style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#A36456',
+                  animation: 'dot2 1.4s infinite ease-in-out'
+                }} />
+                <div style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#A36456',
+                  animation: 'dot3 1.4s infinite ease-in-out'
+                }} />
+              </div>
+              <span style={{ color: '#6F5E53', fontSize: 14 }}>Ela is thinking...</span>
+            </div>
+          </div>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
 
@@ -425,11 +514,11 @@ const Companion: React.FC = () => {
 
           <button
             onClick={handleSendMessage}
-            disabled={!currentMessage.trim()}
+            disabled={!currentMessage.trim() || isLoading}
             style={{
-              background: currentMessage.trim() ? '#1E6E8B' : '#D9CFC2',
+              background: (currentMessage.trim() && !isLoading) ? '#1E6E8B' : '#D9CFC2',
               border: 'none',
-              cursor: currentMessage.trim() ? 'pointer' : 'not-allowed',
+              cursor: (currentMessage.trim() && !isLoading) ? 'pointer' : 'not-allowed',
               padding: 8,
               borderRadius: '50%',
               color: '#fff',
@@ -452,6 +541,58 @@ const Companion: React.FC = () => {
             50% {
               opacity: 0.5;
             }
+          }
+          
+          @keyframes dot1 {
+            0%, 80%, 100% {
+              transform: scale(0);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          
+          @keyframes dot2 {
+            0%, 80%, 100% {
+              transform: scale(0);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          
+          @keyframes dot3 {
+            0%, 80%, 100% {
+              transform: scale(0);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          
+          @keyframes dot2 {
+            0%, 80%, 100% {
+              transform: scale(0);
+              opacity: 0.5;
+            }
+            40% {
+              transform: scale(1);
+              opacity: 1;
+            }
+          }
+          
+          div[style*="animation: dot2"] {
+            animation-delay: 0.2s !important;
+          }
+          
+          div[style*="animation: dot3"] {
+            animation-delay: 0.4s !important;
           }
         `
       }} />
