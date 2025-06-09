@@ -1,19 +1,7 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "dist/**/*",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "@vercel/node"
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/((?!api)(?!.*\\.).*)",
-      "destination": "/dist/index.html"
-    }
-  ]
+  }
 } 
