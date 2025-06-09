@@ -69,4 +69,4 @@ If the chat doesn't work:
 
 - Using GPT-4 with ~300 max tokens per response
 - Estimated cost: ~$0.03-0.06 per conversation
-- Consider switching to `gpt-3.5-turbo` for lower costs if needed 
+- Consider switching to `gpt-3.5-turbo` for lower costs if needed Added dual deployment setup - GitHub Pages + Vercel
