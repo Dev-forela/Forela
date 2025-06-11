@@ -113,35 +113,20 @@ const Companion: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Use environment variable for API URL or fallback to production
-      const API_URL = import.meta.env.VITE_API_URL || 'https://forela.vercel.app/api/chat';
+      // Note: Vercel API temporarily disabled - using mock responses only
+      // const API_URL = import.meta.env.VITE_API_URL || 'https://forela.vercel.app/api/chat';
+      const USE_MOCK_API = true; // Set to false when API is available
       
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          message: messageToSend,
-          context: `User has been tracking activities including yoga, meditation, gentle movement, mindful eating, and managing autoimmune symptoms. Recent entries show focus on building supportive routines and managing flare days.`
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+      if (USE_MOCK_API) {
+        const response: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: generateCompanionResponse(messageToSend),
+          sender: 'companion',
+          timestamp: new Date(),
+          type: 'text'
+        };
+        setMessages(prev => [...prev, response]);
       }
-
-      const data = await response.json();
-
-      const companionResponse: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content: data.reply || 'I apologize, but I seem to be having trouble responding right now. Please try again.',
-        sender: 'companion',
-        timestamp: new Date(),
-        type: 'text'
-      };
-
-      setMessages(prev => [...prev, companionResponse]);
     } catch (error) {
       console.error('Error sending message:', error);
       

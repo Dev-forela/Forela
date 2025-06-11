@@ -6,10 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:gh": "DEPLOY_TARGET=gh-pages tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy:gh": "npm run build:gh && gh-pages -d dist"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",
