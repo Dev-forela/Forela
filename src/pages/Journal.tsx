@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import pencilLine from '../assets/images/pencil-line.png';
 import speechIcon from '../assets/images/speech.png';
-import { FolderHeart, Search, X, Download, ChevronDown, Mic, Save, Volume2, VolumeX, Trash2, Menu, Edit3 } from 'lucide-react';
+import { FolderHeart, Search, X, Download, ChevronDown, Mic, Save, Volume2, VolumeX, Trash2, Menu, Edit3, Square } from 'lucide-react';
+import { createJournalEntry, uploadAudioFile, getJournalEntries, type JournalEntry as SupabaseJournalEntry } from '../lib/supabase';
 
 interface ActivitySummary {
   category: 'Meals' | 'Movement' | 'Mental Health' | 'Sleep';
@@ -17,18 +18,14 @@ interface CompanionSummary {
 }
 
 interface JournalEntry {
-  id: number;
-  title: string;
-  date: string;
-  summary: string;
-  body: string;
-  bodySummary: string;
+  id: string;
+  created_at: string;
+  user_id: string;
+  content: string;
   type: 'text' | 'audio';
-  mood: 'very poor' | 'bad' | 'average' | 'very good' | 'excellent';
-  transcription?: string;
-  activities: ActivitySummary[];
-  companion?: CompanionSummary;
-  preview?: string;
+  audio_url?: string;
+  mood?: string;
+  tags?: string[];
 }
 
 const moodLabels = ['very poor', 'bad', 'average', 'very good', 'excellent'] as const;
@@ -42,166 +39,94 @@ const moodColors: Record<string, string> = {
 
 const journalEntries: JournalEntry[] = [
   {
-    id: 1,
-    title: 'Morning Reflection',
-    date: '2025-05-17',
-    summary: '<b>Body:</b> Calm, rested<br/><b>Mind:</b> Hopeful, focused',
-    body: 'Woke up feeling more rested after going to bed early. Did gentle yoga and had a nourishing breakfast. The morning light streaming through my window felt so peaceful, and I took a moment to really appreciate how much progress I\'ve made in my healing journey.',
-    bodySummary: '',
+    id: '1',
+    created_at: '2025-05-17',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Calm, rested<br/><b>Mind:</b> Hopeful, focused',
     type: 'text',
     mood: 'very good',
-    preview: 'Woke up feeling more rested after going to bed early. Did gentle yoga and had a nourishing breakfast...',
-    activities: [
-      { category: 'Movement', title: 'Gentle Yoga or Pilates', color: '#A36456', time: '7:30am' },
-      { category: 'Meals', title: 'Tylers Coffee with Collagen', color: '#D99C8F', time: '7am' },
-    ],
-    companion: {
-      summary: 'Talked about sleep and stress management',
-      duration: '22 min',
-      startTime: '8:15am',
-    },
+    tags: [],
   },
   {
-    id: 2,
-    title: 'Audio Check-in',
-    date: '2025-05-16',
-    summary: '<b>Body:</b> Sore, low energy<br/><b>Mind:</b> Anxious, distracted',
-    body: '',
-    bodySummary: '',
+    id: '2',
+    created_at: '2025-05-16',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Sore, low energy<br/><b>Mind:</b> Anxious, distracted',
     type: 'audio',
     mood: 'bad',
-    transcription: 'Today was tough. My body felt heavy and I struggled to focus at work. I did my best to eat well and took a short walk at lunch. Sometimes the pain just takes over everything, but I\'m trying to be gentle with myself.',
-    preview: 'Today was tough. My body felt heavy and I struggled to focus at work...',
-    activities: [
-      { category: 'Meals', title: 'High Protein Oatmeal', color: '#D99C8F', time: '8am' },
-      { category: 'Movement', title: 'Pelvic Floor Lengthening', color: '#A36456', time: '12pm' },
-    ],
+    tags: [],
   },
   {
-    id: 3,
-    title: 'Inspired by Art',
-    date: '2025-05-15',
-    summary: '<b>Body:</b> Energized<br/><b>Mind:</b> Creative, inspired',
-    body: 'Went for a walk and got super inspired by my surroundings. Painted for a few hours. Great day for my art. The colors seemed so vibrant today, and I felt this incredible surge of creativity that I haven\'t experienced in months.',
-    bodySummary: '',
+    id: '3',
+    created_at: '2025-05-15',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Energized<br/><b>Mind:</b> Creative, inspired',
     type: 'text',
     mood: 'excellent',
-    preview: 'Went for a walk and got super inspired by my surroundings. Painted for a few hours...',
-    activities: [
-      { category: 'Meals', title: 'Rainbow Bowl', color: '#D99C8F', time: '12pm' },
-      { category: 'Mental Health', title: 'Somatic Trauma Healing', color: '#082026', time: '5pm' },
-    ],
+    tags: [],
   },
   {
-    id: 4,
-    title: 'Evening Audio',
-    date: '2025-05-14',
-    summary: '<b>Body:</b> Tired, mild pain<br/><b>Mind:</b> Calm',
-    body: '',
-    bodySummary: '',
+    id: '4',
+    created_at: '2025-05-14',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Tired, mild pain<br/><b>Mind:</b> Calm',
     type: 'audio',
     mood: 'average',
-    transcription: 'Felt tired after work but managed to do a short meditation. Dinner was light and easy. The meditation really helped center me after a long day.',
-    preview: 'Felt tired after work but managed to do a short meditation. Dinner was light and easy...',
-    activities: [
-      { category: 'Meals', title: 'Green Goddess Soup', color: '#D99C8F', time: '6pm' },
-      { category: 'Sleep', title: 'Warm Bath', color: '#1E6E8B', time: '30-60min before bed' },
-    ],
+    tags: [],
   },
   {
-    id: 5,
-    title: 'Flare Day',
-    date: '2025-05-13',
-    summary: '<b>Body:</b> Tense, cramping, low energy<br/><b>Mind:</b> Frustrated, disconnected, tired',
-    body: 'Woke up already cramping. Cancelled a meeting. The pain is one of those days where everything feels impossible. Trying to remind myself that this will pass.',
-    bodySummary: '',
+    id: '5',
+    created_at: '2025-05-13',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Tense, cramping, low energy<br/><b>Mind:</b> Frustrated, disconnected, tired',
     type: 'text',
     mood: 'bad',
-    preview: 'Woke up already cramping. Cancelled a meeting. The pain is one of those days...',
-    activities: [
-      { category: 'Meals', title: 'Apple and Peanut Butter', color: '#D99C8F', time: '3pm' },
-      { category: 'Movement', title: 'Pelvic Floor Lengthening', color: '#A36456', time: '3pm' },
-    ],
+    tags: [],
   },
   {
-    id: 6,
-    title: 'Quick Audio Note',
-    date: '2025-05-12',
-    summary: '<b>Body:</b> Okay<br/><b>Mind:</b> Focused',
-    body: '',
-    bodySummary: '',
+    id: '6',
+    created_at: '2025-05-12',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Okay<br/><b>Mind:</b> Focused',
     type: 'audio',
     mood: 'average',
-    transcription: 'Kept meals simple. Focused on work. Did a short walk in the afternoon. Feeling more balanced today.',
-    preview: 'Kept meals simple. Focused on work. Did a short walk in the afternoon...',
-    activities: [
-      { category: 'Meals', title: 'Golden Milk', color: '#D99C8F', time: '8pm' },
-    ],
+    tags: [],
   },
   {
-    id: 7,
-    title: 'Good Sleep',
-    date: '2025-05-11',
-    summary: '<b>Body:</b> Rested<br/><b>Mind:</b> Peaceful',
-    body: 'Slept well. Took a warm bath before bed. Felt more at ease today. The early bedtime routine is really starting to make a difference in how I feel.',
-    bodySummary: '',
+    id: '7',
+    created_at: '2025-05-11',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Rested<br/><b>Mind:</b> Peaceful',
     type: 'text',
     mood: 'very good',
-    preview: 'Slept well. Took a warm bath before bed. Felt more at ease today...',
-    activities: [
-      { category: 'Sleep', title: 'Early Bedtime', color: '#1E6E8B', time: 'Bedtime' },
-      { category: 'Meals', title: 'Tylers Coffee with Collagen', color: '#D99C8F', time: '7am' },
-    ],
+    tags: [],
   },
   {
-    id: 8,
-    title: 'Companion Chat',
-    date: '2025-05-10',
-    summary: '<b>Body:</b> Sore<br/><b>Mind:</b> Supported',
-    body: 'Had a long chat with my companion. Felt heard and supported. Did some gentle stretching. It\'s amazing how much talking through my feelings helps process the physical symptoms.',
-    bodySummary: '',
+    id: '8',
+    created_at: '2025-05-10',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Sore<br/><b>Mind:</b> Supported',
     type: 'text',
     mood: 'very good',
-    preview: 'Had a long chat with my companion. Felt heard and supported. Did some gentle stretching...',
-    activities: [
-      { category: 'Movement', title: 'Gentle Yoga or Pilates', color: '#A36456', time: '7:30am' },
-    ],
-    companion: {
-      summary: 'Discussed coping strategies and daily wins',
-      duration: '35 min',
-      startTime: '6:45pm',
-    },
+    tags: [],
   },
   {
-    id: 9,
-    title: 'Sunday Reset',
-    date: '2025-05-09',
-    summary: '<b>Body:</b> Calm<br/><b>Mind:</b> Reflective',
-    body: 'Meal prepped for the week. Did a meditation. Ready for Monday. Sunday rituals are becoming such an anchor for me.',
-    bodySummary: '',
+    id: '9',
+    created_at: '2025-05-09',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Calm<br/><b>Mind:</b> Reflective',
     type: 'text',
     mood: 'excellent',
-    preview: 'Meal prepped for the week. Did a meditation. Ready for Monday...',
-    activities: [
-      { category: 'Meals', title: 'Rainbow Bowl', color: '#D99C8F', time: '12pm' },
-      { category: 'Mental Health', title: 'Pelvic Floor Relaxation Meditation', color: '#082026', time: '7:50am' },
-    ],
+    tags: [],
   },
   {
-    id: 10,
-    title: 'Audio Recap',
-    date: '2025-05-08',
-    summary: '<b>Body:</b> Fatigued<br/><b>Mind:</b> Hopeful',
-    body: '',
-    bodySummary: '',
+    id: '10',
+    created_at: '2025-05-08',
+    user_id: 'temp-user-id',
+    content: '<b>Body:</b> Fatigued<br/><b>Mind:</b> Hopeful',
     type: 'audio',
     mood: 'average',
-    transcription: 'Felt tired but hopeful. Did my best to stick to my care plan. Some days are just about showing up.',
-    preview: 'Felt tired but hopeful. Did my best to stick to my care plan...',
-    activities: [
-      { category: 'Meals', title: 'High Protein Oatmeal', color: '#D99C8F', time: '8am' },
-      { category: 'Movement', title: 'Gentle Yoga or Pilates', color: '#A36456', time: '7:30am' },
-    ],
+    tags: [],
   },
 ];
 
@@ -210,7 +135,7 @@ type GroupedEntries = { [key: string]: JournalEntry[] };
 function groupEntriesByMonth(entries: JournalEntry[]): GroupedEntries {
   const groups: GroupedEntries = {};
   entries.forEach(entry => {
-    const [year, month] = entry.date.split('-');
+    const [year, month] = entry.created_at.split('-');
     const key = `${year}-${month}`;
     if (!groups[key]) groups[key] = [];
     groups[key].push(entry);
@@ -227,7 +152,7 @@ const Journal: React.FC = () => {
   const [showAudio, setShowAudio] = useState(false);
   const [showType, setShowType] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [showActionIcons, setShowActionIcons] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
@@ -236,21 +161,38 @@ const Journal: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [journalText, setJournalText] = useState('');
   const [searchText, setSearchText] = useState('');
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [entries, setEntries] = useState<JournalEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load journal entries on component mount
+  useEffect(() => {
+    const loadEntries = async () => {
+      try {
+        // TODO: Replace with actual user ID from auth
+        const userId = 'temp-user-id';
+        const journalEntries = await getJournalEntries(userId);
+        setEntries(journalEntries as JournalEntry[]);
+      } catch (error) {
+        console.error('Error loading journal entries:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEntries();
+  }, []);
 
   // Filter entries based on search text
   const filteredEntries = journalEntries.filter(entry => {
     if (!searchText.trim()) return true;
     const searchLower = searchText.toLowerCase();
     return (
-      entry.title.toLowerCase().includes(searchLower) ||
-      entry.body.toLowerCase().includes(searchLower) ||
-      entry.transcription?.toLowerCase().includes(searchLower) ||
-      entry.preview?.toLowerCase().includes(searchLower) ||
-      entry.mood.toLowerCase().includes(searchLower) ||
-      entry.activities.some(activity => 
-        activity.title.toLowerCase().includes(searchLower) ||
-        activity.category.toLowerCase().includes(searchLower)
-      )
+      entry.content.toLowerCase().includes(searchLower) ||
+      entry.mood?.toLowerCase().includes(searchLower) ||
+      entry.tags?.some(tag => tag.toLowerCase().includes(searchLower))
     );
   });
 
@@ -270,69 +212,104 @@ const Journal: React.FC = () => {
   const handleDownload = (entry: JournalEntry) => {
     const data = {
       ...entry,
-      date: entry.date,
-      activities: entry.activities,
-      companion: entry.companion,
+      created_at: entry.created_at,
+      tags: entry.tags,
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${entry.title.replace(/\s+/g, '_')}_${entry.date}.json`;
+    a.download = `${entry.content.replace(/\s+/g, '_')}_${entry.created_at.replace(/-/g, '_')}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  const handleRecordToggle = () => {
-    setIsRecording(prev => !prev);
-    if (!isRecording) {
-      setRecordingStatus("Recording...");
-      setRecordingStart(new Date());
-    } else {
-      setRecordingStatus("Tap to start recording");
-    }
-  };
-
-  const handleFinishRecording = () => {
-    if ((!recordingStart && !isRecording) && !selectedMood) {
-      return;
-    }
-
-    const endTime = new Date();
-    const duration = recordingStart ? Math.round((endTime.getTime() - recordingStart.getTime()) / 1000) : 0;
-    const simulatedTranscription = recordingStart ? `Audio entry recorded for ${duration}s. Reflecting on today's feelings and experiences.` : "Mood recorded without audio.";
-    const simulatedTitle = recordingStart ? `Audio - ${new Date(recordingStart).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : `Mood - ${new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-
-    // Reset states and close overlay
-    setIsRecording(false);
-    setRecordingStatus("Tap to start recording");
-    setRecordingStart(null);
-    setSelectedMood(null);
-    setShowActionIcons(false);
-    setShowAudio(false);
-  };
-
-  const handleSaveTextEntry = () => {
-    if (journalText.trim() === '' && !selectedMood) {
-      return;
-    }
-
-    const words = journalText.trim().split(/\s+/);
-    const title = journalText.trim() ? (words.slice(0, 5).join(' ') + (words.length > 5 ? '...' : '')) : 'Mood Entry';
-
-    // Reset states and close overlay
-    setJournalText('');
-    setSelectedMood(null);
-    setShowType(false);
-  };
-
   const handleCloseAudioOverlay = () => {
-    setIsRecording(false);
-    setRecordingStatus("Tap to start recording");
-    setRecordingStart(null);
-    setSelectedMood(null);
-    setShowActionIcons(false);
     setShowAudio(false);
+    setShowActionIcons(false);
+    setIsRecording(false);
+    setAudioBlob(null);
+    audioChunksRef.current = [];
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        setAudioBlob(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleSaveTextEntry = async () => {
+    if (!journalText.trim()) return;
+
+    try {
+      // TODO: Replace with actual user ID from auth
+      const userId = 'temp-user-id';
+      const entry = await createJournalEntry({
+        user_id: userId,
+        content: journalText,
+        type: 'text',
+        tags: []
+      });
+
+      setEntries(prev => [entry as JournalEntry, ...prev]);
+      setJournalText('');
+      setShowType(false);
+    } catch (error) {
+      console.error('Error saving journal entry:', error);
+    }
+  };
+
+  const handleSaveAudioEntry = async () => {
+    if (!audioBlob) return;
+
+    try {
+      // TODO: Replace with actual user ID from auth
+      const userId = 'temp-user-id';
+      
+      // Upload audio file to Supabase Storage
+      const audioUrl = await uploadAudioFile(userId, audioBlob);
+      
+      // Create journal entry with audio URL
+      const entry = await createJournalEntry({
+        user_id: userId,
+        content: 'Audio entry',
+        type: 'audio',
+        audio_url: audioUrl,
+        tags: []
+      });
+
+      setEntries(prev => [entry as JournalEntry, ...prev]);
+      handleCloseAudioOverlay();
+    } catch (error) {
+      console.error('Error saving audio entry:', error);
+    }
   };
 
   const handleCloseTypeOverlay = () => {
@@ -551,13 +528,13 @@ const Journal: React.FC = () => {
                     {/* Header with title, mood, timestamp, and icons */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-                        <div style={{ fontWeight: 700, color: '#311D00', fontSize: 17 }}>{entry.title}</div>
-                        <span style={{ background: '#fff', color: moodColors[entry.mood], border: `2px solid ${moodColors[entry.mood]}`, borderRadius: 8, fontSize: 13, fontWeight: 600, padding: '2px 10px' }}>
-                          {entry.mood.replace(/\b\w/g, l => l.toUpperCase())}
+                        <div style={{ fontWeight: 700, color: '#311D00', fontSize: 17 }}>{entry.content.split('<b>')[1].split('</b>')[0]}</div>
+                        <span style={{ background: '#fff', color: moodColors[entry.mood || ''], border: `2px solid ${moodColors[entry.mood || '']}`, borderRadius: 8, fontSize: 13, fontWeight: 600, padding: '2px 10px' }}>
+                          {entry.mood?.replace(/\b\w/g, l => l.toUpperCase()) || ''}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <div style={{ color: '#A36456', fontSize: 14 }}>{new Date(entry.date).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                        <div style={{ color: '#A36456', fontSize: 14 }}>{new Date(entry.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
                         {entry.type === 'audio' && (
                           <Mic size={20} color="#A36456" />
                         )}
@@ -568,11 +545,11 @@ const Journal: React.FC = () => {
                     </div>
                     
                     {/* Summary */}
-                    {entry.summary && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: entry.summary }} />}
+                    {entry.content.split('<b>')[2] && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: entry.content.split('<b>')[2] }} />}
                     
                     {/* Preview text (always shown) */}
                     <div style={{ color: '#311D00', fontSize: 15, marginBottom: 8, cursor: 'pointer' }} onClick={() => setExpandedId(expanded ? null : entry.id)}>
-                      {entry.preview}
+                      {entry.content.split('<b>')[3]}
                     </div>
 
                     {/* Audio player for audio entries */}
@@ -594,23 +571,18 @@ const Journal: React.FC = () => {
                         {entry.type === 'audio' ? (
                           <>
                             <div style={{ fontWeight: 600, color: '#311D00', fontSize: 15, marginBottom: 8 }}>Transcription:</div>
-                            <div style={{ color: '#311D00', fontSize: 15 }}>{entry.transcription}</div>
+                            <div style={{ color: '#311D00', fontSize: 15 }}>{entry.content.split('<b>')[4]}</div>
                           </>
                         ) : (
-                          <div style={{ color: '#311D00', fontSize: 15 }}>{entry.body}</div>
+                          <div style={{ color: '#311D00', fontSize: 15 }}>{entry.content.split('<b>')[3]}</div>
                         )}
                         {/* Activities summary */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
-                          {entry.activities.map((act, i) => (
-                            <div key={i} style={{ background: act.color, color: '#fff', borderRadius: 8, padding: '6px 12px', fontWeight: 600, fontSize: 14, minWidth: 120, textAlign: 'center' }}>
-                              {act.title} <span style={{ fontWeight: 400, fontSize: 13, opacity: 0.9 }}>({act.time})</span>
+                          {entry.tags?.map((tag, i) => (
+                            <div key={i} style={{ background: moodColors[tag] || '#A36456', color: '#fff', borderRadius: 8, padding: '6px 12px', fontWeight: 600, fontSize: 14, minWidth: 120, textAlign: 'center' }}>
+                              {tag.replace(/\b\w/g, l => l.toUpperCase())}
                             </div>
                           ))}
-                          {entry.companion && (
-                            <div style={{ background: '#A36456', color: '#fff', borderRadius: 8, padding: '6px 12px', fontWeight: 600, fontSize: 14, minWidth: 120, textAlign: 'center' }}>
-                              {entry.companion.summary} <span style={{ fontWeight: 400, fontSize: 13, opacity: 0.9 }}>({entry.companion.duration} at {entry.companion.startTime})</span>
-                            </div>
-                          )}
                         </div>
                       </div>
                     )}
@@ -759,55 +731,69 @@ const Journal: React.FC = () => {
             <MoodSelector selectedMood={selectedMood} onSelectMood={setSelectedMood} />
           </div>
 
-          {/* Recording button and status */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1 }}>
+          {/* Recording button */}
+          <div style={{ 
+            marginTop: '40vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '1rem'
+          }}>
             <button
-              onClick={handleRecordToggle}
+              onClick={isRecording ? stopRecording : startRecording}
               style={{
-                position: 'relative',
-                width: 160,
-                height: 160,
-                background: '#E2B6A1',
+                width: 80,
+                height: 80,
                 borderRadius: '50%',
+                background: isRecording ? '#D99C8F' : '#A36456',
+                border: 'none',
+                cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 8px 32px rgba(49,29,0,0.2)',
-                border: 'none',
-                cursor: 'pointer',
-                animation: isRecording ? 'recordingSpinSlow 4s linear infinite' : 'pulseSlow 2s cubic-bezier(0.4,0,0.6,1) infinite',
-                marginBottom: 20
+                transition: 'all 0.3s ease'
               }}
-              aria-label={isRecording ? "Stop recording" : "Start recording"}
+              aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             >
-              <img src={speechIcon} alt="Record" style={{ width: 80, height: 80 }} />
+              {isRecording ? (
+                <Square size={32} color="#fff" />
+              ) : (
+                <Mic size={32} color="#fff" />
+              )}
             </button>
-            <p style={{ color: '#311D00', fontSize: 18, textAlign: 'center', maxWidth: 280, fontFamily: 'Playfair Display, serif' }}>
-              {recordingStatus}
-            </p>
+            
+            <div style={{ 
+              color: '#311D00',
+              fontSize: '1.1rem',
+              fontWeight: 500
+            }}>
+              {isRecording ? 'Recording...' : 'Tap to record'}
+            </div>
           </div>
-        </div>
 
-        {/* Finished button */}
-        <button 
-          onClick={handleFinishRecording}
-          style={{
-            background: '#8C5A51',
-            color: '#fff',
-            fontWeight: 600,
-            padding: '12px 32px',
-            borderRadius: 8,
-            marginBottom: 32,
-            boxShadow: '0 4px 16px rgba(49,29,0,0.15)',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: 16,
-            width: 'auto',
-            alignSelf: 'center'
-          }}
-        >
-          Finished
-        </button>
+          {/* Finished button */}
+          {audioBlob && (
+            <button
+              onClick={handleSaveAudioEntry}
+              style={{
+                position: 'absolute',
+                bottom: '2rem',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                padding: '0.75rem 2rem',
+                borderRadius: 8,
+                background: '#D99C8F',
+                color: '#fff',
+                border: 'none',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Save Recording
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Text Entry Overlay */}

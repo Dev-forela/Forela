@@ -28,6 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({
       </header>
       <main className={styles.main}>
         <div className={styles.container}>
+          <h1 className={styles.title}>{title}</h1>
           {children}
         </div>
       </main>

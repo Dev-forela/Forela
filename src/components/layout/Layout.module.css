@@ -49,9 +49,10 @@
 
 .title {
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
-  margin: 0;
+  margin: 1rem 0 2rem 0;
+  color: var(--color-text-main);
 }
 
 .main {
@@ -68,6 +69,6 @@
   }
   
   .title {
-    font-size: 1.75rem;
+    font-size: 2rem;
   }
 } 
