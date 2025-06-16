@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Auth.module.css';
+import forelaLogo from '../../assets/images/forela-logo.png';
 
 interface FormData {
   email: string;
@@ -19,6 +20,12 @@ const SignIn: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize animation variables
+  useEffect(() => {
+    document.documentElement.style.setProperty('--hue-rotate', `${Math.random() * 360}deg`);
+    document.documentElement.style.setProperty('--pos-offset', Math.random().toString());
+  }, []);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -63,7 +70,7 @@ const SignIn: React.FC = () => {
       <div className={styles.authContainer}>
         <div className={styles.logoContainer}>
           <img 
-            src="/src/assets/images/Forela logo.png" 
+            src={forelaLogo} 
             alt="Forela Logo" 
             className={styles.logo}
           />

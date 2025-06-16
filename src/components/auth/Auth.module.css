@@ -1,25 +1,103 @@
-/* Ambient background for auth pages */
+/* CSS Variables for animated background */
+:root {
+  --hue-rotate: 0deg;
+  --pos-offset: 0;
+  --move-1: linear-gradient(
+    45deg,
+    #4B7A4C,
+    #A2762A 25%,
+    #B04A2C 50%,
+    #4B7A4C 75%,
+    #A2762A
+  );
+  --move-2: linear-gradient(
+    135deg,
+    #A2762A,
+    #B04A2C 30%,
+    #4B7A4C 60%,
+    #A2762A 90%
+  );
+  --move-3: linear-gradient(
+    225deg,
+    #B04A2C,
+    #4B7A4C 25%,
+    #A2762A 50%,
+    #B04A2C 75%
+  );
+}
+
+/* Ambient background for auth pages with animation */
 .authPage {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background: 
-    linear-gradient(45deg, transparent 0%, transparent 57%, #4B7A4C 100%),
-    linear-gradient(-45deg, #A2762A 0%, #B04A2C 0.3%, #4B7A4C 112%, transparent 11%),
-    linear-gradient(-90deg, #B04A2C 100%, #A2762A 65%, transparent 20%);
+  background: var(--move-1), var(--move-2), var(--move-3);
+  background-blend-mode: multiply;
+  background-size: 400% 400%;
+  animation: flow 55s cubic-bezier(0.4, 0.2, 0.3, 1) infinite,
+    hueShift 120s linear infinite,
+    jitter 15s -7.5s ease-in-out infinite alternate;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
 }
 
+@keyframes flow {
+  0% {
+    background-position: calc(100% * var(--pos-offset))
+        calc(50% * var(--pos-offset)),
+      calc(50% * var(--pos-offset)) calc(100% * var(--pos-offset)), 0% 100%;
+  }
+  33% {
+    background-position: 100% 50%, 50% 100%, 100% 0%;
+  }
+  66% {
+    background-position: 50% 100%, 100% 50%, 0% 0%;
+  }
+  100% {
+    background-position: calc(100% * var(--pos-offset))
+        calc(50% * var(--pos-offset)),
+      calc(50% * var(--pos-offset)) calc(100% * var(--pos-offset)), 100% 100%;
+  }
+}
+
+@keyframes hueShift {
+  0% {
+    filter: hue-rotate(var(--hue-rotate));
+  }
+  100% {
+    filter: hue-rotate(calc(360deg + var(--hue-rotate)));
+  }
+}
+
+@keyframes jitter {
+  0% {
+    background-size: 400% 400%, 380% 420%, 420% 380%;
+  }
+  100% {
+    background-size: 420% 380%, 400% 400%, 380% 420%;
+  }
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .authPage {
+    animation: none;
+    background: linear-gradient(45deg, #4B7A4C 0%, #A2762A 50%, #B04A2C 100%);
+  }
+}
+
 .authContainer {
   max-width: 500px;
   width: 100%;
   padding: 2rem;
-  background: #4B3621;
+  background: rgba(75, 54, 33, 0.95);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
 }
 
 .logoContainer {
@@ -30,6 +108,7 @@
 .logo {
   max-width: 150px;
   height: auto;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .authContainer h1 {
@@ -38,6 +117,7 @@
   color: #FFFFFF;
   font-size: 1.5rem;
   font-weight: 600;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .authForm {
@@ -56,6 +136,7 @@
   font-weight: 500;
   color: #FFFFFF;
   font-size: 0.9rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .formGroup input,
@@ -63,10 +144,10 @@
   padding: 0.75rem;
   border: 1px solid #735236;
   border-radius: 6px;
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.95);
   color: #000000;
   font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .formGroup input:focus,
@@ -74,6 +155,7 @@
   outline: none;
   border-color: #A2762A;
   box-shadow: 0 0 0 2px rgba(162, 118, 42, 0.2);
+  background: rgba(255, 255, 255, 1);
 }
 
 .formGroup input.error,
@@ -86,6 +168,7 @@
   color: #ff6b6b;
   font-size: 0.875rem;
   margin-top: 0.25rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .submitButton {
@@ -97,12 +180,14 @@
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .submitButton:hover {
   background: #8a6142;
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .submitButton:active {
@@ -114,18 +199,20 @@
   background: #666;
   cursor: not-allowed;
   transform: none;
+  box-shadow: none;
 }
 
 .authToggle {
   text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #735236;
+  border-top: 1px solid rgba(115, 82, 54, 0.5);
 }
 
 .authToggle p {
   color: #FFFFFF;
   margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .authToggleLink {
@@ -133,6 +220,7 @@
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .authToggleLink:hover {
