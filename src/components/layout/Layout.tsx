@@ -1,37 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 import styles from './Layout.module.css';
 import hamburgerIcon from '../../assets/images/hamburger vectory.png';
+import { Drawer } from './Drawer';
+import BottomNav from './BottomNav';
 
 interface LayoutProps {
-  children: React.ReactNode;
   title?: string;
-  onMenuClick?: () => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  title = 'Forela',
-  onMenuClick 
+  title = 'Forela'
 }) => {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleMenuClick = () => {
+    setDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+  };
+
   return (
-    <div className={styles.layout}>
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <button 
-            onClick={onMenuClick}
-            aria-label="Open menu"
-            className={styles.menuButton}
-          >
-            <img src={hamburgerIcon} alt="Open menu" style={{ width: 28, height: 28, display: 'block' }} />
-          </button>
-        </div>
-      </header>
-      <main className={styles.main}>
-        <div className={styles.container}>
-          <h1 className={styles.title}>{title}</h1>
-          {children}
-        </div>
-      </main>
-    </div>
+    <>
+      <Drawer isOpen={drawerOpen} onClose={handleCloseDrawer} />
+      <div className={styles.layout}>
+        <header className={styles.header}>
+          <div className={styles.headerContent}>
+            <button 
+              onClick={handleMenuClick}
+              aria-label="Open menu"
+              className={styles.menuButton}
+            >
+              <img src={hamburgerIcon} alt="Open menu" style={{ width: 28, height: 28, display: 'block' }} />
+            </button>
+          </div>
+        </header>
+        <main className={styles.main}>
+          <div className={styles.container}>
+            <h1 className={styles.title}>{title}</h1>
+            <Outlet />
+          </div>
+        </main>
+      </div>
+      <BottomNav />
+    </>
   );
 }; 
