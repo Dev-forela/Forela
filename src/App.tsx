@@ -9,6 +9,9 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import Journal from './pages/Journal';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
+import Companion from './pages/Companion';
+import Trends from './pages/Trends';
+import Settings from './pages/Settings';
 
 const App: React.FC = () => {
   return (
@@ -32,9 +35,9 @@ const App: React.FC = () => {
               <Route index element={<Home />} />
               <Route path="journal" element={<Journal />} />
               <Route path="profile" element={<Profile />} />
-              <Route path="companion" element={<div>Companion Page</div>} />
-              <Route path="trends" element={<div>Trends Page</div>} />
-              <Route path="settings" element={<div>Settings Page</div>} />
+              <Route path="companion" element={<Companion />} />
+              <Route path="trends" element={<Trends />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* Fallback route */}

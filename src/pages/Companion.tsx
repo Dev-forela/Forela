@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Plus, Mic, Send, MessageCircle, Sparkles } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface ChatMessage {
   id: string;
@@ -19,6 +20,7 @@ interface ChatSession {
 }
 
 const Companion: React.FC = () => {
+  const { user } = useAuth();
   const [showPreviousChats, setShowPreviousChats] = useState(false);
   const [currentMessage, setCurrentMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -27,7 +29,7 @@ const Companion: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
-      content: `Hi Olivia! I've been reviewing your recent journal entries and activities. I noticed you had a great morning yesterday with yoga and coffee, and you mentioned feeling more rested. How are you feeling today? I'm here to listen and support you through whatever you're experiencing.`,
+      content: `Hi! I'm Ela, your personal health companion. I'm here to support you through your wellness journey, especially with managing autoimmune conditions like Hashimoto's, Endometriosis, and PCOS. I can help you process your feelings, discuss symptoms, and explore coping strategies. How are you feeling today?`,
       sender: 'companion',
       timestamp: new Date(),
       type: 'text'
@@ -68,34 +70,6 @@ const Companion: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
-  const generateCompanionResponse = (userMessage: string): string => {
-    const messageLower = userMessage.toLowerCase();
-    
-    // Simple sentiment and keyword-based responses
-    if (messageLower.includes('pain') || messageLower.includes('hurt') || messageLower.includes('flare')) {
-      return `I hear that you're experiencing pain right now, and I want you to know that your feelings are completely valid. From your recent journal entries, I see you've been managing flare days with gentle movement and pelvic floor lengthening. Would you like to try some breathing exercises, or would you prefer to talk about what's helping you cope today?`;
-    }
-    
-    if (messageLower.includes('tired') || messageLower.includes('exhausted') || messageLower.includes('energy')) {
-      return `Fatigue can be so challenging, especially when you're dealing with other symptoms. I noticed in your journal that you've been working on your sleep routine and it seemed to help a few days ago. How has your sleep been lately? Sometimes even small adjustments to rest can make a difference.`;
-    }
-    
-    if (messageLower.includes('anxious') || messageLower.includes('worried') || messageLower.includes('stress')) {
-      return `Anxiety and stress can really amplify physical symptoms. I see from your activities that you've been doing meditation and somatic trauma healing work. Those are wonderful tools. Would you like to explore what's triggering these feelings today, or would you prefer some grounding techniques?`;
-    }
-    
-    if (messageLower.includes('better') || messageLower.includes('good') || messageLower.includes('positive')) {
-      return `I'm so glad to hear you're feeling better! That's wonderful progress. Looking at your recent entries, it seems like the combination of gentle movement, mindful eating, and your morning routine is really supporting you. What feels like it's contributing most to this positive shift?`;
-    }
-    
-    if (messageLower.includes('art') || messageLower.includes('creative') || messageLower.includes('paint')) {
-      return `I loved reading about your inspired art session! Creativity can be such a powerful form of self-expression and healing. You mentioned feeling energized and the colors seeming more vibrant - that sounds like you were really in flow. How has your creative practice been supporting your wellbeing?`;
-    }
-    
-    // Default empathetic response
-    return `Thank you for sharing that with me. I can see from your journal entries that you're really committed to understanding and supporting your healing journey. You've been so thoughtful about tracking your activities, mood, and body responses. What would feel most supportive to explore together right now?`;
-  };
-
   const handleSendMessage = async () => {
     if (!currentMessage.trim() || isLoading) return;
 
@@ -113,27 +87,46 @@ const Companion: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Note: Vercel API temporarily disabled - using mock responses only
-      // const API_URL = import.meta.env.VITE_API_URL || 'https://forela.vercel.app/api/chat';
-      const USE_MOCK_API = true; // Set to false when API is available
+      // Use the OpenAI API endpoint
+      const API_URL = import.meta.env.VITE_API_URL || 'https://forela.vercel.app/api/chat';
       
-      if (USE_MOCK_API) {
-        const response: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: generateCompanionResponse(messageToSend),
-          sender: 'companion',
-          timestamp: new Date(),
-          type: 'text'
-        };
-        setMessages(prev => [...prev, response]);
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: messageToSend,
+          context: `User ID: ${user?.id}. This is a conversation in the Forela health companion app.`
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const companionResponse: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        content: data.reply,
+        sender: 'companion',
+        timestamp: new Date(),
+        type: 'text'
+      };
+      
+      setMessages(prev => [...prev, companionResponse]);
     } catch (error) {
       console.error('Error sending message:', error);
       
-      // Fallback to mock response if API fails
+      // Fallback response if API fails
       const fallbackResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: generateCompanionResponse(messageToSend),
+        content: "I'm sorry, I'm having trouble connecting right now. Please try again in a moment. In the meantime, know that I'm here to support you through whatever you're experiencing.",
         sender: 'companion',
         timestamp: new Date(),
         type: 'text'
@@ -154,7 +147,7 @@ const Companion: React.FC = () => {
     setMessages([
       {
         id: Date.now().toString(),
-        content: `Hi Olivia! I'm here for our new conversation. Based on your recent journal entries, I can see you've been focusing on gentle movement, mindful eating, and building supportive routines. How can I support you today?`,
+        content: `Hi! I'm here for our new conversation. I'm Ela, your personal health companion, ready to support you through whatever you're experiencing today. How can I help you?`,
         sender: 'companion',
         timestamp: new Date(),
         type: 'text'
@@ -171,7 +164,7 @@ const Companion: React.FC = () => {
       setMessages([
         {
           id: '1',
-          content: `Continuing our conversation about ${chat.title.toLowerCase()}...`,
+          content: `Continuing our conversation about ${chat.title.toLowerCase()}. I'm here to support you - what would you like to explore today?`,
           sender: 'companion',
           timestamp: new Date(),
           type: 'text'
@@ -211,6 +204,15 @@ const Companion: React.FC = () => {
       }, 3000);
     }
   };
+
+  // Show loading state if user is not available
+  if (!user) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading user information...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#EAE9E5', minHeight: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
