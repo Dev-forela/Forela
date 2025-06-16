@@ -20,6 +20,7 @@ const SignIn: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [generalError, setGeneralError] = useState<string>('');
 
   // Initialize animation variables
   useEffect(() => {
@@ -49,12 +50,20 @@ const SignIn: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setGeneralError('');
+    
     try {
       await signIn(formData.email, formData.password);
       navigate('/profile');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in:', error);
-      setErrors({ email: 'Invalid email or password' });
+      
+      // Display the specific error message from the AuthContext
+      if (error.message) {
+        setGeneralError(error.message);
+      } else {
+        setGeneralError('An unexpected error occurred during sign in. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -63,6 +72,11 @@ const SignIn: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear general error when user starts typing
+    if (generalError) {
+      setGeneralError('');
+    }
   };
 
   return (
@@ -75,6 +89,12 @@ const SignIn: React.FC = () => {
             className={styles.logo}
           />
         </div>
+        
+        {generalError && (
+          <div className={styles.generalError}>
+            {generalError}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className={styles.authForm}>
           <div className={styles.formGroup}>

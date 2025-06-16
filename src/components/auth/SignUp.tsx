@@ -32,6 +32,7 @@ const SignUp: React.FC = () => {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [generalError, setGeneralError] = useState<string>('');
 
   // Initialize animation variables
   useEffect(() => {
@@ -85,6 +86,8 @@ const SignUp: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
+    setGeneralError('');
+    
     try {
       await signUp(formData.email, formData.password, {
         firstName: formData.firstName,
@@ -94,9 +97,15 @@ const SignUp: React.FC = () => {
         primaryCondition: formData.primaryCondition,
       });
       navigate('/profile');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing up:', error);
-      setErrors({ email: 'An error occurred during sign up' });
+      
+      // Display the specific error message from the AuthContext
+      if (error.message) {
+        setGeneralError(error.message);
+      } else {
+        setGeneralError('An unexpected error occurred during sign up. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +114,11 @@ const SignUp: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear general error when user starts typing
+    if (generalError) {
+      setGeneralError('');
+    }
   };
 
   return (
@@ -119,6 +133,13 @@ const SignUp: React.FC = () => {
         </div>
         
         <h1>Create Your Account</h1>
+        
+        {generalError && (
+          <div className={styles.generalError}>
+            {generalError}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className={styles.authForm}>
           <div className={styles.formGroup}>
             <label htmlFor="firstName">First Name *</label>

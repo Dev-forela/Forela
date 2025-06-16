@@ -62,19 +62,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string, userData: SignUpData) => {
     try {
-      const { data: { user }, error } = await supabase.auth.signUp({
+      console.log('Starting sign up process for:', email);
+      
+      // First, try to sign up the user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) throw error;
-      if (!user) throw new Error('No user returned from sign up');
+      if (authError) {
+        console.error('Auth signup error:', authError);
+        throw new Error(`Authentication failed: ${authError.message}`);
+      }
+
+      if (!authData.user) {
+        throw new Error('No user returned from sign up');
+      }
+
+      console.log('User created successfully:', authData.user.id);
+
+      // Check if we need to confirm email
+      if (!authData.session) {
+        throw new Error('Please check your email to confirm your account before signing in.');
+      }
 
       // Create profile
+      console.log('Creating profile for user:', authData.user.id);
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
-          user_id: user.id,
+          user_id: authData.user.id,
           first_name: userData.firstName,
           middle_name: userData.middleName,
           last_name: userData.lastName,
@@ -82,34 +99,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: email,
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw new Error(`Profile creation failed: ${profileError.message}`);
+      }
+
+      console.log('Profile created successfully');
 
       // Create medical information
+      console.log('Creating medical information for user:', authData.user.id);
       const { error: medicalError } = await supabase
         .from('medical_information')
         .insert({
-          user_id: user.id,
+          user_id: authData.user.id,
           primary_condition: userData.primaryCondition,
         });
 
-      if (medicalError) throw medicalError;
+      if (medicalError) {
+        console.error('Medical information creation error:', medicalError);
+        throw new Error(`Medical information creation failed: ${medicalError.message}`);
+      }
+
+      console.log('Medical information created successfully');
+      console.log('Sign up process completed successfully');
 
     } catch (error) {
-      console.error('Error signing up:', error);
+      console.error('Error in signUp function:', error);
       throw error;
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting to sign in user:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        
+        // Provide more specific error messages
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Invalid email or password. Please check your credentials and try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          throw new Error('Please check your email and confirm your account before signing in.');
+        } else {
+          throw new Error(`Sign in failed: ${error.message}`);
+        }
+      }
+
+      if (!data.user) {
+        throw new Error('No user data returned from sign in');
+      }
+
+      console.log('Sign in successful for user:', data.user.id);
+
     } catch (error) {
-      console.error('Error signing in:', error);
+      console.error('Error in signIn function:', error);
       throw error;
     }
   };
