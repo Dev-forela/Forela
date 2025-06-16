@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Auth.module.css';
 
@@ -59,39 +59,57 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
-      <h1>Welcome Back</h1>
-      <form onSubmit={handleSubmit} className={styles.authForm}>
-        <div className={styles.formGroup}>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={errors.email ? styles.error : ''}
+    <div className={styles.authPage}>
+      <div className={styles.authContainer}>
+        <div className={styles.logoContainer}>
+          <img 
+            src="/src/assets/images/Forela logo.png" 
+            alt="Forela Logo" 
+            className={styles.logo}
           />
-          {errors.email && <span className={styles.errorText}>{errors.email}</span>}
         </div>
+        
+        <form onSubmit={handleSubmit} className={styles.authForm}>
+          <div className={styles.formGroup}>
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={errors.email ? styles.error : ''}
+              placeholder="Enter your email"
+            />
+            {errors.email && <span className={styles.errorText}>{errors.email}</span>}
+          </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className={errors.password ? styles.error : ''}
-          />
-          {errors.password && <span className={styles.errorText}>{errors.password}</span>}
+          <div className={styles.formGroup}>
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={errors.password ? styles.error : ''}
+              placeholder="Enter your password"
+            />
+            {errors.password && <span className={styles.errorText}>{errors.password}</span>}
+          </div>
+
+          <button type="submit" className={styles.submitButton} disabled={isLoading}>
+            {isLoading ? 'Signing In...' : 'Sign In'}
+          </button>
+        </form>
+
+        <div className={styles.authToggle}>
+          <p>Don't have an account?</p>
+          <Link to="/signup" className={styles.authToggleLink}>
+            Sign Up
+          </Link>
         </div>
-
-        <button type="submit" className={styles.submitButton} disabled={isLoading}>
-          {isLoading ? 'Signing In...' : 'Sign In'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 };

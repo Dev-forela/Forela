@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import styles from './Auth.module.css';
 
@@ -101,117 +101,140 @@ const SignUp: React.FC = () => {
   };
 
   return (
-    <div className={styles.authContainer}>
-      <h1>Create Your Account</h1>
-      <form onSubmit={handleSubmit} className={styles.authForm}>
-        <div className={styles.formGroup}>
-          <label htmlFor="firstName">First Name *</label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            className={errors.firstName ? styles.error : ''}
-          />
-          {errors.firstName && <span className={styles.errorText}>{errors.firstName}</span>}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="middleName">Middle Name</label>
-          <input
-            type="text"
-            id="middleName"
-            name="middleName"
-            value={formData.middleName}
-            onChange={handleChange}
+    <div className={styles.authPage}>
+      <div className={styles.authContainer}>
+        <div className={styles.logoContainer}>
+          <img 
+            src="/src/assets/images/Forela logo.png" 
+            alt="Forela Logo" 
+            className={styles.logo}
           />
         </div>
+        
+        <h1>Create Your Account</h1>
+        <form onSubmit={handleSubmit} className={styles.authForm}>
+          <div className={styles.formGroup}>
+            <label htmlFor="firstName">First Name *</label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className={errors.firstName ? styles.error : ''}
+              placeholder="Enter your first name"
+            />
+            {errors.firstName && <span className={styles.errorText}>{errors.firstName}</span>}
+          </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="lastName">Last Name *</label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            className={errors.lastName ? styles.error : ''}
-          />
-          {errors.lastName && <span className={styles.errorText}>{errors.lastName}</span>}
+          <div className={styles.formGroup}>
+            <label htmlFor="middleName">Middle Name</label>
+            <input
+              type="text"
+              id="middleName"
+              name="middleName"
+              value={formData.middleName}
+              onChange={handleChange}
+              placeholder="Enter your middle name (optional)"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="lastName">Last Name *</label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className={errors.lastName ? styles.error : ''}
+              placeholder="Enter your last name"
+            />
+            {errors.lastName && <span className={styles.errorText}>{errors.lastName}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="dateOfBirth">Date of Birth *</label>
+            <input
+              type="date"
+              id="dateOfBirth"
+              name="dateOfBirth"
+              value={formData.dateOfBirth}
+              onChange={handleChange}
+              className={errors.dateOfBirth ? styles.error : ''}
+            />
+            {errors.dateOfBirth && <span className={styles.errorText}>{errors.dateOfBirth}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="email">Email *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={errors.email ? styles.error : ''}
+              placeholder="Enter your email"
+            />
+            {errors.email && <span className={styles.errorText}>{errors.email}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="password">Password *</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={errors.password ? styles.error : ''}
+              placeholder="Enter your password (min 8 characters)"
+            />
+            {errors.password && <span className={styles.errorText}>{errors.password}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="confirmPassword">Confirm Password *</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={errors.confirmPassword ? styles.error : ''}
+              placeholder="Confirm your password"
+            />
+            {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
+          </div>
+
+          <div className={styles.formGroup}>
+            <label htmlFor="primaryCondition">What brings you to Forela? *</label>
+            <select
+              id="primaryCondition"
+              name="primaryCondition"
+              value={formData.primaryCondition}
+              onChange={handleChange}
+            >
+              <option value="Hashimotos">Hashimoto's</option>
+              <option value="Endometriosis">Endometriosis</option>
+              <option value="Adenomyosis">Adenomyosis</option>
+              <option value="Other Autoimmune">Other Autoimmune</option>
+            </select>
+          </div>
+
+          <button type="submit" className={styles.submitButton} disabled={isLoading}>
+            {isLoading ? 'Creating Account...' : 'Create Account'}
+          </button>
+        </form>
+
+        <div className={styles.authToggle}>
+          <p>Already have an account?</p>
+          <Link to="/signin" className={styles.authToggleLink}>
+            Sign In
+          </Link>
         </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="dateOfBirth">Date of Birth *</label>
-          <input
-            type="date"
-            id="dateOfBirth"
-            name="dateOfBirth"
-            value={formData.dateOfBirth}
-            onChange={handleChange}
-            className={errors.dateOfBirth ? styles.error : ''}
-          />
-          {errors.dateOfBirth && <span className={styles.errorText}>{errors.dateOfBirth}</span>}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="email">Email *</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={errors.email ? styles.error : ''}
-          />
-          {errors.email && <span className={styles.errorText}>{errors.email}</span>}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="password">Password *</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className={errors.password ? styles.error : ''}
-          />
-          {errors.password && <span className={styles.errorText}>{errors.password}</span>}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="confirmPassword">Confirm Password *</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className={errors.confirmPassword ? styles.error : ''}
-          />
-          {errors.confirmPassword && <span className={styles.errorText}>{errors.confirmPassword}</span>}
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="primaryCondition">What brings you to Forela? *</label>
-          <select
-            id="primaryCondition"
-            name="primaryCondition"
-            value={formData.primaryCondition}
-            onChange={handleChange}
-          >
-            <option value="Hashimotos">Hashimoto's</option>
-            <option value="Endometriosis">Endometriosis</option>
-            <option value="Adenomyosis">Adenomyosis</option>
-            <option value="Other Autoimmune">Other Autoimmune</option>
-          </select>
-        </div>
-
-        <button type="submit" className={styles.submitButton} disabled={isLoading}>
-          {isLoading ? 'Creating Account...' : 'Create Account'}
-        </button>
-      </form>
+      </div>
     </div>
   );
 };
