@@ -28,11 +28,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  getProfile, 
-  createOrUpdateProfile, 
+  getUserMetadata,
+  updateUserMetadata, 
   getUserDisplayName, 
   formatMemberSince, 
-  Profile 
+  UserMetadata 
 } from '../lib/supabase';
 import { 
   getHealthIntegrationSettings, 
@@ -62,9 +62,8 @@ interface SettingSection {
 
 const Settings: React.FC = () => {
   const { user, signOut } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [healthSettings, setHealthSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [healthSettings, setHealthSettings] = useState<any>(null);
   
   // UI State
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -75,7 +74,6 @@ const Settings: React.FC = () => {
   const [editForm, setEditForm] = useState({
     first_name: '',
     last_name: '',
-    email: '',
     date_of_birth: '',
     phone_number: ''
   });
@@ -106,7 +104,7 @@ const Settings: React.FC = () => {
     autoBackup: true
   });
 
-  // Load user profile and health settings
+  // Load user data and health settings
   useEffect(() => {
     const loadUserData = async () => {
       if (!user) return;
@@ -114,17 +112,15 @@ const Settings: React.FC = () => {
       try {
         setLoading(true);
         
-        // Load profile
-        const userProfile = await getProfile(user.id);
-        setProfile(userProfile);
+        // Get user metadata
+        const metadata = getUserMetadata(user);
         
-        // Set form data
+        // Set form data from user metadata
         setEditForm({
-          first_name: userProfile.first_name || '',
-          last_name: userProfile.last_name || '',
-          email: userProfile.email || user.email || '',
-          date_of_birth: userProfile.date_of_birth || '',
-          phone_number: userProfile.phone_number || ''
+          first_name: metadata.first_name || '',
+          last_name: metadata.last_name || '',
+          date_of_birth: metadata.date_of_birth || '',
+          phone_number: metadata.phone_number || ''
         });
         
         // Load health settings
@@ -157,9 +153,10 @@ const Settings: React.FC = () => {
     if (!user) return;
     
     try {
-      const updatedProfile = await createOrUpdateProfile(user.id, editForm);
-      setProfile(updatedProfile);
+      await updateUserMetadata(editForm);
       setShowEditProfile(false);
+      // Refresh the page to get updated user data
+      window.location.reload();
     } catch (error) {
       console.error('Error updating profile:', error);
     }
@@ -202,15 +199,17 @@ const Settings: React.FC = () => {
     }
   };
 
-  const getUserInitials = (profile: Profile | null): string => {
-    if (!profile) return 'U';
+  const getUserInitials = (user: any): string => {
+    if (!user) return 'U';
     
-    if (profile.first_name && profile.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
-    } else if (profile.first_name) {
-      return profile.first_name[0].toUpperCase();
-    } else if (profile.full_name) {
-      const names = profile.full_name.split(' ');
+    const metadata = getUserMetadata(user);
+    
+    if (metadata.first_name && metadata.last_name) {
+      return `${metadata.first_name[0]}${metadata.last_name[0]}`.toUpperCase();
+    } else if (metadata.first_name) {
+      return metadata.first_name[0].toUpperCase();
+    } else if (metadata.full_name) {
+      const names = metadata.full_name.split(' ');
       return names.length > 1 ? `${names[0][0]}${names[1][0]}`.toUpperCase() : names[0][0].toUpperCase();
     }
     
@@ -567,17 +566,17 @@ const Settings: React.FC = () => {
             fontSize: 24,
             fontWeight: 700
           }}>
-            {getUserInitials(profile)}
+            {getUserInitials(user)}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#311D00', marginBottom: 4 }}>
-              {getUserDisplayName(profile)}
+              {getUserDisplayName(user)}
             </div>
             <div style={{ fontSize: 14, color: '#6F5E53', marginBottom: 2 }}>
-              {profile?.email || user?.email || 'No email provided'}
+              {user?.email || 'No email provided'}
             </div>
             <div style={{ fontSize: 12, color: '#A36456' }}>
-              Member since {formatMemberSince(profile?.created_at || new Date().toISOString())}
+              Member since {formatMemberSince(user?.created_at || new Date().toISOString())}
             </div>
           </div>
           <button
@@ -722,17 +721,22 @@ const Settings: React.FC = () => {
                   </label>
                   <input
                     type="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    value={user?.email || ''}
+                    disabled
                     style={{
                       width: '100%',
                       padding: 12,
                       border: '1px solid #D9CFC2',
                       borderRadius: 8,
                       fontSize: 16,
-                      outline: 'none'
+                      outline: 'none',
+                      backgroundColor: '#F5F1ED',
+                      color: '#6F5E53'
                     }}
                   />
+                  <div style={{ fontSize: 12, color: '#6F5E53', marginTop: 4 }}>
+                    Email cannot be changed here. Contact support if needed.
+                  </div>
                 </div>
                 
                 <div>

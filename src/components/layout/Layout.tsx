@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import styles from './Layout.module.css';
-import hamburgerIcon from '../../assets/images/hamburger vectory.png';
 import { Drawer } from './Drawer';
 import BottomNav from './BottomNav';
+import AnimatedMenuButton from '../shared/AnimatedMenuButton';
 
 interface LayoutProps {
   title?: string;
@@ -28,13 +28,11 @@ export const Layout: React.FC<LayoutProps> = ({
       <div className={styles.layout}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
-            <button 
+            <AnimatedMenuButton 
+              isOpen={drawerOpen}
               onClick={handleMenuClick}
-              aria-label="Open menu"
-              className={styles.menuButton}
-            >
-              <img src={hamburgerIcon} alt="Open menu" style={{ width: 28, height: 28, display: 'block' }} />
-            </button>
+              color="#311D00"
+            />
           </div>
         </header>
         <main className={styles.main}>

@@ -9,7 +9,7 @@ import ActivityOverlay from '../components/shared/ActivityOverlay';
 import ReplaceOverlay, { SectionReplaceOverlay } from '../components/shared/ReplaceOverlay';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, getTimeBasedGreeting, Profile } from '../lib/supabase';
+import { getUserFirstName, getTimeBasedGreeting } from '../lib/supabase';
 
 // Import specific images for each activity
 import coffeeImg from '../assets/images/coffee.png';
@@ -578,28 +578,10 @@ const Accordion: React.FC<{
 const MyProfile: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!user) return;
-      
-      try {
-        const userProfile = await getProfile(user.id);
-        setProfile(userProfile);
-      } catch (error) {
-        console.error('Error loading profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, [user]);
+  const [loading, setLoading] = useState(false);
 
   const greeting = getTimeBasedGreeting();
-  const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'there';
+  const firstName = getUserFirstName(user);
   return (
     <div style={{ padding: '1.5rem 0', background: '#EAE9E5' }}>
       {/* Greeting and summary */}

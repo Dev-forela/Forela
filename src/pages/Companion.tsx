@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Plus, Mic, Send, MessageCircle, Sparkles } from 'lucide-react';
+import { Plus, Mic, Send, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface ChatMessage {

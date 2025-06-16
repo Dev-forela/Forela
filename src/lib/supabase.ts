@@ -10,26 +10,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types for our database tables
-export type Profile = {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  full_name?: string;
+export type UserMetadata = {
   first_name?: string;
   last_name?: string;
-  email?: string;
   date_of_birth?: string;
   phone_number?: string;
-  avatar_url?: string;
-  preferences: {
-    dark_mode: boolean;
-    notifications_enabled: boolean;
-    health_integrations: {
-      apple_health: boolean;
-      google_fit: boolean;
-    };
-  };
+  full_name?: string;
 };
 
 export type JournalEntry = {
@@ -44,27 +30,17 @@ export type JournalEntry = {
 };
 
 // Helper functions for common operations
-export const getProfile = async (userId: string) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-  
-  if (error) throw error;
-  return data as Profile;
+export const getUserMetadata = (user: any): UserMetadata => {
+  return user?.user_metadata || {};
 };
 
-export const updateProfile = async (userId: string, updates: Partial<Profile>) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(updates)
-    .eq('user_id', userId)
-    .select()
-    .single();
+export const updateUserMetadata = async (updates: UserMetadata) => {
+  const { data, error } = await supabase.auth.updateUser({
+    data: updates
+  });
   
   if (error) throw error;
-  return data as Profile;
+  return data.user;
 };
 
 export const createJournalEntry = async (entry: Omit<JournalEntry, 'id' | 'created_at'>) => {
@@ -107,42 +83,36 @@ export const uploadAudioFile = async (userId: string, audioBlob: Blob) => {
   return publicUrl;
 };
 
-// Create or update user profile
-export const createOrUpdateProfile = async (userId: string, profileData: {
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  date_of_birth?: string;
-  phone_number?: string;
-  full_name?: string;
-}) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .upsert({
-      user_id: userId,
-      ...profileData,
-      updated_at: new Date().toISOString()
-    })
-    .select()
-    .single();
+// Get user's display name from auth metadata
+export const getUserDisplayName = (user: any): string => {
+  if (!user) return 'User';
   
-  if (error) throw error;
-  return data as Profile;
-};
-
-// Get user's display name
-export const getUserDisplayName = (profile: Profile | null): string => {
-  if (!profile) return 'User';
+  const metadata = getUserMetadata(user);
   
-  if (profile.first_name && profile.last_name) {
-    return `${profile.first_name} ${profile.last_name}`;
-  } else if (profile.full_name) {
-    return profile.full_name;
-  } else if (profile.first_name) {
-    return profile.first_name;
+  if (metadata.first_name && metadata.last_name) {
+    return `${metadata.first_name} ${metadata.last_name}`;
+  } else if (metadata.full_name) {
+    return metadata.full_name;
+  } else if (metadata.first_name) {
+    return metadata.first_name;
   }
   
   return 'User';
+};
+
+// Get user's first name from auth metadata
+export const getUserFirstName = (user: any): string => {
+  if (!user) return 'there';
+  
+  const metadata = getUserMetadata(user);
+  
+  if (metadata.first_name) {
+    return metadata.first_name;
+  } else if (metadata.full_name) {
+    return metadata.full_name.split(' ')[0];
+  }
+  
+  return 'there';
 };
 
 // Get greeting based on time of day

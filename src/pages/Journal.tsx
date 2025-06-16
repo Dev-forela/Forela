@@ -510,7 +510,7 @@ const Journal: React.FC = () => {
                     </div>
                     
                     {/* Summary */}
-                    {parsedContent.summary && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: parsedContent.summary }} />}
+                    {parsedContent.summary && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }}>{parsedContent.summary.replace(/<\/?b>/g, '')}</div>}
                     
                     {/* Preview text (always shown) */}
                     <div style={{ color: '#311D00', fontSize: 15, marginBottom: 8, cursor: 'pointer' }} onClick={() => setExpandedId(expanded ? null : entry.id)}>
@@ -821,25 +821,31 @@ const Journal: React.FC = () => {
             }}
           />
 
-          {/* Save button (floating) */}
+          {/* Save button (bottom center) */}
           <button 
             onClick={handleSaveTextEntry}
             style={{
               position: 'absolute',
-              bottom: 24,
-              right: 24,
+              bottom: '2rem',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              padding: '0.75rem 2rem',
+              borderRadius: 8,
               background: '#1E6E8B',
               color: '#fff',
-              padding: 16,
-              borderRadius: '50%',
-              boxShadow: '0 4px 16px rgba(49,29,0,0.15)',
               border: 'none',
+              fontSize: '1.1rem',
+              fontWeight: 600,
               cursor: 'pointer',
-              zIndex: 50
+              boxShadow: '0 4px 16px rgba(49,29,0,0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
             aria-label="Save journal entry"
           >
-            <Edit3 size={24} />
+            <Save size={20} />
+            Save Entry
           </button>
         </div>
       </div>
