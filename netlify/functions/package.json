@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "description": "Netlify functions for Forela app",
   "dependencies": {
-    "openai": "^3.3.0"
+    "openai": "^4.67.1"
   }
 } 
