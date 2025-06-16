@@ -7,7 +7,7 @@ import SignIn from './components/auth/SignIn';
 import SignUp from './components/auth/SignUp';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Journal from './pages/Journal';
-import Profile from './pages/Profile';
+import MyProfile from './pages/MyProfile';
 import Home from './pages/Home';
 import Companion from './pages/Companion';
 import Trends from './pages/Trends';
@@ -32,9 +32,9 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Home />} />
+              <Route index element={<MyProfile />} />
               <Route path="journal" element={<Journal />} />
-              <Route path="profile" element={<Profile />} />
+              <Route path="profile" element={<MyProfile />} />
               <Route path="companion" element={<Companion />} />
               <Route path="trends" element={<Trends />} />
               <Route path="settings" element={<Settings />} />

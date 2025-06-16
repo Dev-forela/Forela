@@ -87,8 +87,8 @@ const Companion: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Use the OpenAI API endpoint
-      const API_URL = import.meta.env.VITE_API_URL || 'https://forela.vercel.app/api/chat';
+      // Use the Netlify function endpoint
+      const API_URL = '/.netlify/functions/chat';
       
       const response = await fetch(API_URL, {
         method: 'POST',
