@@ -227,96 +227,14 @@ const Companion: React.FC = () => {
         right: 0,
         zIndex: 30
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Sparkles size={32} color="#A36456" />
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#311D00', margin: 0, fontFamily: 'Inter, Arial, Helvetica, sans-serif' }}>
-              Your Companion
-            </h1>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button
-              onClick={() => setShowPreviousChats(!showPreviousChats)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 8,
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                color: '#A36456'
-              }}
-              aria-label="Toggle previous chats"
-            >
-              {showPreviousChats ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-            <button
-              onClick={startNewChat}
-              style={{
-                background: '#E2B6A1',
-                color: '#8C5A51',
-                border: 'none',
-                borderRadius: '50%',
-                width: 40,
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(49,29,0,0.1)'
-              }}
-              aria-label="Start new chat"
-            >
-              <Plus size={20} />
-            </button>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Sparkles size={32} color="#A36456" />
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#311D00', margin: 0, fontFamily: 'Inter, Arial, Helvetica, sans-serif' }}>
+            Your Companion
+          </h1>
         </div>
 
-        {/* Previous chats drawer */}
-        <div style={{
-          maxHeight: showPreviousChats ? '200px' : '0',
-          overflow: 'hidden',
-          transition: 'max-height 0.3s ease-in-out',
-          marginTop: showPreviousChats ? 16 : 0
-        }}>
-          <div style={{ 
-            background: '#F5F1ED', 
-            borderRadius: 8, 
-            padding: showPreviousChats ? 12 : 0,
-            transition: 'padding 0.3s ease-in-out'
-          }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#6F5E53', marginBottom: 8 }}>
-              Previous Conversations
-            </div>
-            <div style={{ maxHeight: '120px', overflowY: 'auto' }}>
-              {previousChats.map(chat => (
-                <button
-                  key={chat.id}
-                  onClick={() => loadPreviousChat(chat.id)}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    padding: '8px 12px',
-                    marginBottom: 4,
-                    background: currentChatId === chat.id ? '#DAEBF0' : '#fff',
-                    border: '1px solid #D9CFC2',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    fontSize: 13
-                  }}
-                >
-                  <div style={{ fontWeight: 600, color: '#311D00', marginBottom: 2 }}>
-                    {chat.title}
-                  </div>
-                  <div style={{ color: '#6F5E53', fontSize: 12 }}>
-                    {chat.lastMessage}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Chat messages */}

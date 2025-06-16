@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -17,10 +17,31 @@ import {
   Info,
   HelpCircle,
   LogOut,
-  Palette,
   Volume2,
-  VolumeX
+  VolumeX,
+  X,
+  Save,
+  Heart,
+  Activity,
+  Apple,
+  Zap
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { 
+  getProfile, 
+  createOrUpdateProfile, 
+  getUserDisplayName, 
+  formatMemberSince, 
+  Profile 
+} from '../lib/supabase';
+import { 
+  getHealthIntegrationSettings, 
+  enableAppleHealthIntegration, 
+  enableOuraIntegration, 
+  disableHealthIntegration 
+} from '../lib/healthIntegration';
+import { getOuraAuthUrl } from '../lib/ouraService';
+import { isHealthKitAvailable } from '../lib/appleHealth';
 
 interface SettingItem {
   id: string;
@@ -40,6 +61,31 @@ interface SettingSection {
 }
 
 const Settings: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [healthSettings, setHealthSettings] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // UI State
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editSection, setEditSection] = useState<'profile' | 'password'>('profile');
+  
+  // Form State
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    date_of_birth: '',
+    phone_number: ''
+  });
+  
+  const [passwordForm, setPasswordForm] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+
   const [notifications, setNotifications] = useState({
     journalReminders: true,
     companionMessages: true,
@@ -60,7 +106,40 @@ const Settings: React.FC = () => {
     autoBackup: true
   });
 
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // Load user profile and health settings
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Load profile
+        const userProfile = await getProfile(user.id);
+        setProfile(userProfile);
+        
+        // Set form data
+        setEditForm({
+          first_name: userProfile.first_name || '',
+          last_name: userProfile.last_name || '',
+          email: userProfile.email || user.email || '',
+          date_of_birth: userProfile.date_of_birth || '',
+          phone_number: userProfile.phone_number || ''
+        });
+        
+        // Load health settings
+        const healthIntegrationSettings = await getHealthIntegrationSettings(user.id);
+        setHealthSettings(healthIntegrationSettings);
+        
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user]);
 
   const handleNotificationToggle = (key: keyof typeof notifications) => (value: boolean) => {
     setNotifications(prev => ({ ...prev, [key]: value }));
@@ -74,7 +153,95 @@ const Settings: React.FC = () => {
     setPreferences(prev => ({ ...prev, [key]: value }));
   };
 
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const updatedProfile = await createOrUpdateProfile(user.id, editForm);
+      setProfile(updatedProfile);
+      setShowEditProfile(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  const handleAppleHealthToggle = async (enabled: boolean) => {
+    if (!user) return;
+    
+    try {
+      if (enabled) {
+        const success = await enableAppleHealthIntegration(user.id);
+        if (success) {
+          const updatedSettings = await getHealthIntegrationSettings(user.id);
+          setHealthSettings(updatedSettings);
+        }
+      } else {
+        await disableHealthIntegration(user.id, 'apple_health');
+        const updatedSettings = await getHealthIntegrationSettings(user.id);
+        setHealthSettings(updatedSettings);
+      }
+    } catch (error) {
+      console.error('Error toggling Apple Health:', error);
+    }
+  };
+
+  const handleOuraConnect = () => {
+    const authUrl = getOuraAuthUrl();
+    window.location.href = authUrl;
+  };
+
+  const handleOuraDisconnect = async () => {
+    if (!user) return;
+    
+    try {
+      await disableHealthIntegration(user.id, 'oura');
+      const updatedSettings = await getHealthIntegrationSettings(user.id);
+      setHealthSettings(updatedSettings);
+    } catch (error) {
+      console.error('Error disconnecting Oura:', error);
+    }
+  };
+
+  const getUserInitials = (profile: Profile | null): string => {
+    if (!profile) return 'U';
+    
+    if (profile.first_name && profile.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    } else if (profile.first_name) {
+      return profile.first_name[0].toUpperCase();
+    } else if (profile.full_name) {
+      const names = profile.full_name.split(' ');
+      return names.length > 1 ? `${names[0][0]}${names[1][0]}`.toUpperCase() : names[0][0].toUpperCase();
+    }
+    
+    return 'U';
+  };
+
   const settingSections: SettingSection[] = [
+    {
+      title: "Health Integrations",
+      items: [
+        {
+          id: 'apple-health',
+          title: 'Apple Health',
+          subtitle: isHealthKitAvailable() ? 'Sync your health data from iPhone' : 'Not available on this device',
+          icon: <Apple size={20} />,
+          type: 'toggle',
+          value: healthSettings?.apple_health?.enabled || false,
+          onToggle: handleAppleHealthToggle,
+          color: '#000'
+        },
+        {
+          id: 'oura-ring',
+          title: 'Oura Ring',
+          subtitle: healthSettings?.oura?.enabled ? 'Connected and syncing' : 'Connect your Oura Ring',
+          icon: <Zap size={20} />,
+          type: healthSettings?.oura?.enabled ? 'action' : 'action',
+          onClick: healthSettings?.oura?.enabled ? handleOuraDisconnect : handleOuraConnect,
+          color: '#FF6B35'
+        }
+      ]
+    },
     {
       title: "Account",
       items: [
@@ -84,7 +251,10 @@ const Settings: React.FC = () => {
           subtitle: 'Update your personal information',
           icon: <User size={20} />,
           type: 'navigate',
-          onClick: () => console.log('Navigate to profile'),
+          onClick: () => {
+            setEditSection('profile');
+            setShowEditProfile(true);
+          },
           color: '#1E6E8B'
         },
         {
@@ -93,7 +263,10 @@ const Settings: React.FC = () => {
           subtitle: 'Update your account password',
           icon: <Lock size={20} />,
           type: 'navigate',
-          onClick: () => console.log('Navigate to password change'),
+          onClick: () => {
+            setEditSection('password');
+            setShowEditProfile(true);
+          },
           color: '#A36456'
         }
       ]
@@ -140,16 +313,6 @@ const Settings: React.FC = () => {
           value: notifications.weeklyReports,
           onToggle: handleNotificationToggle('weeklyReports'),
           color: '#1E6E8B'
-        },
-        {
-          id: 'email-updates',
-          title: 'Email Updates',
-          subtitle: 'Receive updates via email',
-          icon: <Mail size={20} />,
-          type: 'toggle',
-          value: notifications.emailUpdates,
-          onToggle: handleNotificationToggle('emailUpdates'),
-          color: '#6F5E53'
         }
       ]
     },
@@ -175,16 +338,6 @@ const Settings: React.FC = () => {
           value: privacy.analytics,
           onToggle: handlePrivacyToggle('analytics'),
           color: '#1E6E8B'
-        },
-        {
-          id: 'location-data',
-          title: 'Location Data',
-          subtitle: 'Use location for movement tracking',
-          icon: <Shield size={20} />,
-          type: 'toggle',
-          value: privacy.locationData,
-          onToggle: handlePrivacyToggle('locationData'),
-          color: '#E2B6A1'
         }
       ]
     },
@@ -273,7 +426,7 @@ const Settings: React.FC = () => {
           subtitle: 'Sign out of your account',
           icon: <LogOut size={20} />,
           type: 'action',
-          onClick: () => console.log('Log out'),
+          onClick: signOut,
           color: '#D99C8F'
         }
       ]
@@ -351,12 +504,32 @@ const Settings: React.FC = () => {
               padding: 8
             }}
           >
-            <ChevronRight size={20} />
+            {item.id === 'oura-ring' && healthSettings?.oura?.enabled ? (
+              <span style={{ fontSize: 14, fontWeight: 600, color: item.color }}>Disconnect</span>
+            ) : item.id === 'oura-ring' ? (
+              <span style={{ fontSize: 14, fontWeight: 600, color: item.color }}>Connect</span>
+            ) : (
+              <ChevronRight size={20} />
+            )}
           </button>
         )}
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div style={{ 
+        background: '#EAE9E5', 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}>
+        <div style={{ color: '#A36456', fontSize: 18 }}>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#EAE9E5', minHeight: '100vh', paddingBottom: 120 }}>
@@ -394,20 +567,24 @@ const Settings: React.FC = () => {
             fontSize: 24,
             fontWeight: 700
           }}>
-            O
+            {getUserInitials(profile)}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#311D00', marginBottom: 4 }}>
-              Olivia Johnson
+              {getUserDisplayName(profile)}
             </div>
             <div style={{ fontSize: 14, color: '#6F5E53', marginBottom: 2 }}>
-              olivia.johnson@email.com
+              {profile?.email || user?.email || 'No email provided'}
             </div>
             <div style={{ fontSize: 12, color: '#A36456' }}>
-              Member since January 2025
+              Member since {formatMemberSince(profile?.created_at || new Date().toISOString())}
             </div>
           </div>
           <button
+            onClick={() => {
+              setEditSection('profile');
+              setShowEditProfile(true);
+            }}
             style={{
               background: '#E2B6A1',
               color: '#8C5A51',
@@ -455,6 +632,250 @@ const Settings: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditProfile && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '1.5rem'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 12,
+            padding: '2rem',
+            maxWidth: 500,
+            width: '100%',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#311D00', margin: 0 }}>
+                {editSection === 'profile' ? 'Edit Profile' : 'Change Password'}
+              </h2>
+              <button
+                onClick={() => setShowEditProfile(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#6F5E53',
+                  padding: 4
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {editSection === 'profile' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.first_name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, first_name: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: 12,
+                        border: '1px solid #D9CFC2',
+                        borderRadius: 8,
+                        fontSize: 16,
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={editForm.last_name}
+                      onChange={(e) => setEditForm(prev => ({ ...prev, last_name: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: 12,
+                        border: '1px solid #D9CFC2',
+                        borderRadius: 8,
+                        fontSize: 16,
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      border: '1px solid #D9CFC2',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    value={editForm.date_of_birth}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, date_of_birth: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      border: '1px solid #D9CFC2',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                    Phone Number (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={editForm.phone_number}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, phone_number: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      border: '1px solid #D9CFC2',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordForm.current_password}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, current_password: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      border: '1px solid #D9CFC2',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordForm.new_password}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, new_password: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      border: '1px solid #D9CFC2',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+                
+                <div>
+                  <label style={{ display: 'block', marginBottom: 8, fontSize: 14, fontWeight: 600, color: '#311D00' }}>
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordForm.confirm_password}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirm_password: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: 12,
+                      border: '1px solid #D9CFC2',
+                      borderRadius: 8,
+                      fontSize: 16,
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 12, marginTop: '2rem' }}>
+              <button
+                onClick={() => setShowEditProfile(false)}
+                style={{
+                  flex: 1,
+                  background: '#F5F1ED',
+                  color: '#6F5E53',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '12px 24px',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={editSection === 'profile' ? handleSaveProfile : () => console.log('Change password')}
+                style={{
+                  flex: 1,
+                  background: '#1E6E8B',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '12px 24px',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <Save size={16} />
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteConfirm && (

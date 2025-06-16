@@ -8,6 +8,8 @@ import repeatReplaceIcon from '../assets/images/repeat-replace.png';
 import ActivityOverlay from '../components/shared/ActivityOverlay';
 import ReplaceOverlay, { SectionReplaceOverlay } from '../components/shared/ReplaceOverlay';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getProfile, getTimeBasedGreeting, Profile } from '../lib/supabase';
 
 // Import specific images for each activity
 import coffeeImg from '../assets/images/coffee.png';
@@ -573,24 +575,37 @@ const Accordion: React.FC<{
   );
 };
 
-const getGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 5) return 'Good Night';
-  if (hour < 12) return 'Good Morning';
-  if (hour < 17) return 'Good Afternoon';
-  if (hour < 20) return 'Good Evening';
-  return 'Good Night';
-};
-
 const MyProfile: React.FC = () => {
-  const greeting = getGreeting();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user) return;
+      
+      try {
+        const userProfile = await getProfile(user.id);
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
+  const greeting = getTimeBasedGreeting();
+  const firstName = profile?.first_name || profile?.full_name?.split(' ')[0] || 'there';
   return (
     <div style={{ padding: '1.5rem 0', background: '#EAE9E5' }}>
       {/* Greeting and summary */}
       <section style={{ background: '#EAE9E5', borderRadius: '1rem', padding: '2rem 1.5rem', marginBottom: '2rem', boxShadow: 'var(--shadow-md)' }}>
         <h2 style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 32, lineHeight: '45px', letterSpacing: 0, marginBottom: '0.5rem', color: '#311d00' }}>
-          {greeting}, Olivia.
+          {greeting}, {firstName}.
         </h2>
         <p style={{ fontFamily: 'Inter, Arial, Helvetica, sans-serif', fontWeight: 400, lineHeight: '100%', letterSpacing: 0, color: 'var(--color-text-main)', fontSize: '1rem', marginBottom: '1.5rem' }}>
           You've made meaningful progress over the past six weeks — with a 60% improvement in pain, bladder urgency, and constipation. Your care is working and we're here to continue supporting you. Keep listening to your body.

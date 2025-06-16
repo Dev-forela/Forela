@@ -4,6 +4,7 @@ import speechIcon from '../assets/images/speech.png';
 import { FolderHeart, Search, X, Download, ChevronDown, Mic, Save, Volume2, VolumeX, Trash2, Menu, Edit3, Square } from 'lucide-react';
 import { createJournalEntry, uploadAudioFile, getJournalEntries, type JournalEntry as SupabaseJournalEntry } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import AudioPlayer from '../components/shared/AudioPlayer';
 
 interface ActivitySummary {
   category: 'Meals' | 'Movement' | 'Mental Health' | 'Sleep';
@@ -517,15 +518,13 @@ const Journal: React.FC = () => {
                     </div>
 
                     {/* Audio player for audio entries */}
-                    {entry.type === 'audio' && (
-                      <div style={{ background: '#F5E9E2', borderRadius: 8, padding: '8px 12px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <button style={{ background: '#E2B6A1', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                          <div style={{ width: 0, height: 0, borderLeft: '8px solid #fff', borderTop: '5px solid transparent', borderBottom: '5px solid transparent', marginLeft: 2 }} />
-                        </button>
-                        <div style={{ flex: 1, height: 4, background: '#D9CFC2', borderRadius: 2, position: 'relative' }}>
-                          <div style={{ width: '30%', height: '100%', background: '#E2B6A1', borderRadius: 2 }} />
-                        </div>
-                        <span style={{ color: '#A36456', fontSize: 12 }}>2:34</span>
+                    {entry.type === 'audio' && entry.audio_url && (
+                      <div style={{ marginBottom: 8 }}>
+                        <AudioPlayer 
+                          audioUrl={entry.audio_url}
+                          title={parsedContent.title}
+                          onDownload={() => handleDownload(entry)}
+                        />
                       </div>
                     )}
 

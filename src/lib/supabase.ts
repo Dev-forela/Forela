@@ -15,7 +15,12 @@ export type Profile = {
   created_at: string;
   updated_at: string;
   user_id: string;
-  full_name: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  date_of_birth?: string;
+  phone_number?: string;
   avatar_url?: string;
   preferences: {
     dark_mode: boolean;
@@ -100,4 +105,66 @@ export const uploadAudioFile = async (userId: string, audioBlob: Blob) => {
     .getPublicUrl(fileName);
   
   return publicUrl;
+};
+
+// Create or update user profile
+export const createOrUpdateProfile = async (userId: string, profileData: {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  date_of_birth?: string;
+  phone_number?: string;
+  full_name?: string;
+}) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert({
+      user_id: userId,
+      ...profileData,
+      updated_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data as Profile;
+};
+
+// Get user's display name
+export const getUserDisplayName = (profile: Profile | null): string => {
+  if (!profile) return 'User';
+  
+  if (profile.first_name && profile.last_name) {
+    return `${profile.first_name} ${profile.last_name}`;
+  } else if (profile.full_name) {
+    return profile.full_name;
+  } else if (profile.first_name) {
+    return profile.first_name;
+  }
+  
+  return 'User';
+};
+
+// Get greeting based on time of day
+export const getTimeBasedGreeting = (): string => {
+  const hour = new Date().getHours();
+  
+  if (hour < 12) {
+    return 'Good morning';
+  } else if (hour < 17) {
+    return 'Good afternoon';
+  } else {
+    return 'Good evening';
+  }
+};
+
+// Format member since date
+export const formatMemberSince = (createdAt: string): string => {
+  const date = new Date(createdAt);
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
 }; 
