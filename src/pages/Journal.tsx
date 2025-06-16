@@ -3,6 +3,7 @@ import pencilLine from '../assets/images/pencil-line.png';
 import speechIcon from '../assets/images/speech.png';
 import { FolderHeart, Search, X, Download, ChevronDown, Mic, Save, Volume2, VolumeX, Trash2, Menu, Edit3, Square } from 'lucide-react';
 import { createJournalEntry, uploadAudioFile, getJournalEntries, type JournalEntry as SupabaseJournalEntry } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface ActivitySummary {
   category: 'Meals' | 'Movement' | 'Mental Health' | 'Sleep';
@@ -37,99 +38,6 @@ const moodColors: Record<string, string> = {
   'excellent': '#4CB944',
 };
 
-const journalEntries: JournalEntry[] = [
-  {
-    id: '1',
-    created_at: '2025-05-17',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Calm, rested<br/><b>Mind:</b> Hopeful, focused',
-    type: 'text',
-    mood: 'very good',
-    tags: [],
-  },
-  {
-    id: '2',
-    created_at: '2025-05-16',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Sore, low energy<br/><b>Mind:</b> Anxious, distracted',
-    type: 'audio',
-    mood: 'bad',
-    tags: [],
-  },
-  {
-    id: '3',
-    created_at: '2025-05-15',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Energized<br/><b>Mind:</b> Creative, inspired',
-    type: 'text',
-    mood: 'excellent',
-    tags: [],
-  },
-  {
-    id: '4',
-    created_at: '2025-05-14',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Tired, mild pain<br/><b>Mind:</b> Calm',
-    type: 'audio',
-    mood: 'average',
-    tags: [],
-  },
-  {
-    id: '5',
-    created_at: '2025-05-13',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Tense, cramping, low energy<br/><b>Mind:</b> Frustrated, disconnected, tired',
-    type: 'text',
-    mood: 'bad',
-    tags: [],
-  },
-  {
-    id: '6',
-    created_at: '2025-05-12',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Okay<br/><b>Mind:</b> Focused',
-    type: 'audio',
-    mood: 'average',
-    tags: [],
-  },
-  {
-    id: '7',
-    created_at: '2025-05-11',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Rested<br/><b>Mind:</b> Peaceful',
-    type: 'text',
-    mood: 'very good',
-    tags: [],
-  },
-  {
-    id: '8',
-    created_at: '2025-05-10',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Sore<br/><b>Mind:</b> Supported',
-    type: 'text',
-    mood: 'very good',
-    tags: [],
-  },
-  {
-    id: '9',
-    created_at: '2025-05-09',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Calm<br/><b>Mind:</b> Reflective',
-    type: 'text',
-    mood: 'excellent',
-    tags: [],
-  },
-  {
-    id: '10',
-    created_at: '2025-05-08',
-    user_id: 'temp-user-id',
-    content: '<b>Body:</b> Fatigued<br/><b>Mind:</b> Hopeful',
-    type: 'audio',
-    mood: 'average',
-    tags: [],
-  },
-];
-
 type GroupedEntries = { [key: string]: JournalEntry[] };
 
 function groupEntriesByMonth(entries: JournalEntry[]): GroupedEntries {
@@ -149,6 +57,7 @@ const monthNames = [
 ];
 
 const Journal: React.FC = () => {
+  const { user } = useAuth();
   const [showAudio, setShowAudio] = useState(false);
   const [showType, setShowType] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -166,27 +75,62 @@ const Journal: React.FC = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Load journal entries on component mount
   useEffect(() => {
     const loadEntries = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        // TODO: Replace with actual user ID from auth
-        const userId = 'temp-user-id';
-        const journalEntries = await getJournalEntries(userId);
+        setError(null);
+        console.log('Loading journal entries for user:', user.id);
+        const journalEntries = await getJournalEntries(user.id);
         setEntries(journalEntries as JournalEntry[]);
       } catch (error) {
         console.error('Error loading journal entries:', error);
+        setError('Failed to load journal entries');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadEntries();
-  }, []);
+  }, [user]);
+
+  // Show loading state if user is not available
+  if (!user) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading user information...</p>
+      </div>
+    );
+  }
+
+  // Show loading state while fetching entries
+  if (isLoading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p>Loading journal entries...</p>
+      </div>
+    );
+  }
+
+  // Show error state if there was an error
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <p style={{ color: 'red' }}>Error: {error}</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
+      </div>
+    );
+  }
 
   // Filter entries based on search text
-  const filteredEntries = journalEntries.filter(entry => {
+  const filteredEntries = entries.filter(entry => {
     if (!searchText.trim()) return true;
     const searchLower = searchText.toLowerCase();
     return (
@@ -198,38 +142,30 @@ const Journal: React.FC = () => {
 
   const grouped = groupEntriesByMonth(filteredEntries);
   const mostRecentKey = Object.keys(grouped).sort().reverse()[0];
-  const entryCount = journalEntries.length;
 
-  // Handle search submission
   const handleSearchSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      // Search is already happening through filtering, so we can just focus out
-      (e.target as HTMLInputElement).blur();
+      e.preventDefault();
     }
   };
 
-  // Download logic
   const handleDownload = (entry: JournalEntry) => {
-    const data = {
-      ...entry,
-      created_at: entry.created_at,
-      tags: entry.tags,
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${entry.content.replace(/\s+/g, '_')}_${entry.created_at.replace(/-/g, '_')}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const element = document.createElement('a');
+    const file = new Blob([entry.content], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `journal-entry-${entry.created_at}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   const handleCloseAudioOverlay = () => {
     setShowAudio(false);
-    setShowActionIcons(false);
     setIsRecording(false);
+    setRecordingStatus("Tap to start recording");
+    setRecordingStart(null);
     setAudioBlob(null);
-    audioChunksRef.current = [];
+    setSelectedMood(null);
   };
 
   const startRecording = async () => {
@@ -240,9 +176,7 @@ const Journal: React.FC = () => {
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+        audioChunksRef.current.push(event.data);
       };
 
       mediaRecorder.onstop = () => {
@@ -253,8 +187,11 @@ const Journal: React.FC = () => {
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) {
-      console.error('Error accessing microphone:', err);
+      setRecordingStart(new Date());
+      setRecordingStatus("Recording...");
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      setRecordingStatus("Error accessing microphone");
     }
   };
 
@@ -262,50 +199,55 @@ const Journal: React.FC = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+      setRecordingStatus("Recording finished");
     }
   };
 
   const handleSaveTextEntry = async () => {
-    if (!journalText.trim()) return;
+    if (!journalText.trim() || !selectedMood || !user) return;
 
     try {
-      // TODO: Replace with actual user ID from auth
-      const userId = 'temp-user-id';
-      const entry = await createJournalEntry({
-        user_id: userId,
+      const newEntry = await createJournalEntry({
+        user_id: user.id,
         content: journalText,
         type: 'text',
+        mood: selectedMood,
         tags: []
       });
 
-      setEntries(prev => [entry as JournalEntry, ...prev]);
+      // Add the new entry to the local state
+      setEntries(prev => [newEntry as JournalEntry, ...prev]);
+      
+      // Reset form
       setJournalText('');
+      setSelectedMood(null);
       setShowType(false);
     } catch (error) {
-      console.error('Error saving journal entry:', error);
+      console.error('Error saving text entry:', error);
     }
   };
 
   const handleSaveAudioEntry = async () => {
-    if (!audioBlob) return;
+    if (!audioBlob || !selectedMood || !user) return;
 
     try {
-      // TODO: Replace with actual user ID from auth
-      const userId = 'temp-user-id';
+      // Upload audio file
+      const audioUrl = await uploadAudioFile(user.id, audioBlob);
       
-      // Upload audio file to Supabase Storage
-      const audioUrl = await uploadAudioFile(userId, audioBlob);
-      
-      // Create journal entry with audio URL
-      const entry = await createJournalEntry({
-        user_id: userId,
-        content: 'Audio entry',
+      // Create journal entry
+      const newEntry = await createJournalEntry({
+        user_id: user.id,
+        content: 'Audio journal entry',
         type: 'audio',
         audio_url: audioUrl,
+        mood: selectedMood,
         tags: []
       });
 
-      setEntries(prev => [entry as JournalEntry, ...prev]);
+      // Add the new entry to the local state
+      setEntries(prev => [newEntry as JournalEntry, ...prev]);
+      
+      // Close overlay and reset
       handleCloseAudioOverlay();
     } catch (error) {
       console.error('Error saving audio entry:', error);
@@ -313,9 +255,9 @@ const Journal: React.FC = () => {
   };
 
   const handleCloseTypeOverlay = () => {
+    setShowType(false);
     setJournalText('');
     setSelectedMood(null);
-    setShowType(false);
   };
 
   const handleCloseSearch = () => {
@@ -323,36 +265,28 @@ const Journal: React.FC = () => {
     setSearchText('');
   };
 
-  // Mood selector component
   const MoodSelector = ({ selectedMood, onSelectMood }: { selectedMood: string | null, onSelectMood: (mood: string) => void }) => (
-    <div className="my-4">
-      <p style={{ fontSize: 14, fontWeight: 500, textAlign: 'center', color: '#311D00', marginBottom: 8 }}>How are you feeling?</p>
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', gap: 4, padding: '0 8px' }}>
-        {moodLabels.map(mood => (
-          <button 
-            key={mood} 
+    <div style={{ marginBottom: '1rem' }}>
+      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+        How are you feeling?
+      </label>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        {moodLabels.map((mood) => (
+          <button
+            key={mood}
             onClick={() => onSelectMood(mood)}
             style={{
-              padding: '4px 8px',
-              borderRadius: 6,
-              fontSize: 12,
-              fontWeight: 600,
-              transition: 'all 0.15s ease-in-out',
-              background: selectedMood === mood ? moodColors[mood] : '#F5F1ED',
-              color: selectedMood === mood ? '#fff' : '#6F5E53',
-              border: 'none',
+              padding: '0.5rem 1rem',
+              border: selectedMood === mood ? '2px solid #333' : '1px solid #ccc',
+              borderRadius: '20px',
+              backgroundColor: selectedMood === mood ? moodColors[mood] : '#f5f5f5',
+              color: selectedMood === mood ? 'white' : '#333',
               cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              width: '20%',
-              height: 32,
-              justifyContent: 'center',
-              transform: selectedMood === mood ? 'scale(1.05)' : 'scale(1)',
-              boxShadow: selectedMood === mood ? '0 2px 6px rgba(49,29,0,0.15)' : 'none'
+              fontSize: '0.875rem',
+              textTransform: 'capitalize'
             }}
           >
-            {mood.replace(/\b\w/g, l => l.toUpperCase())}
+            {mood}
           </button>
         ))}
       </div>
@@ -450,7 +384,7 @@ const Journal: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <FolderHeart size={20} color="#A36456" />
-            <span style={{ fontWeight: 600, color: '#A36456', fontSize: 16 }}>{entryCount} Journal Entries</span>
+            <span style={{ fontWeight: 600, color: '#A36456', fontSize: 16 }}>{entries.length} Journal Entries</span>
           </div>
           <button
             style={{ 
