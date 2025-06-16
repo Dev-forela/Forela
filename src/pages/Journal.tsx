@@ -56,6 +56,19 @@ const monthNames = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
+// Helper functions to safely parse journal entry content
+const parseEntryContent = (content: string) => {
+  if (!content) return { title: 'Untitled Entry', summary: '', preview: '', transcription: '' };
+  
+  const parts = content.split('<b>');
+  return {
+    title: parts[1]?.split('</b>')[0] || 'Untitled Entry',
+    summary: parts[2] || '',
+    preview: parts[3] || content.substring(0, 100) + (content.length > 100 ? '...' : ''),
+    transcription: parts[4] || ''
+  };
+};
+
 const Journal: React.FC = () => {
   const { user } = useAuth();
   const [showAudio, setShowAudio] = useState(false);
@@ -150,8 +163,11 @@ const Journal: React.FC = () => {
   };
 
   const handleDownload = (entry: JournalEntry) => {
+    const parsedContent = parseEntryContent(entry.content);
+    const downloadContent = `${parsedContent.title}\n\nDate: ${new Date(entry.created_at).toLocaleDateString()}\nMood: ${entry.mood || 'Not specified'}\nType: ${entry.type}\n\n${parsedContent.preview}\n\n${entry.type === 'audio' && parsedContent.transcription ? `Transcription:\n${parsedContent.transcription}` : ''}`;
+    
     const element = document.createElement('a');
-    const file = new Blob([entry.content], { type: 'text/plain' });
+    const file = new Blob([downloadContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = `journal-entry-${entry.created_at}.txt`;
     document.body.appendChild(element);
@@ -207,9 +223,19 @@ const Journal: React.FC = () => {
     if (!journalText.trim() || !selectedMood || !user) return;
 
     try {
+      // Create properly formatted content for text entries
+      const today = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      const title = `Journal Entry - ${today}`;
+      const formattedContent = `<b>${title}</b><b></b><b>Personal reflection</b><b>${journalText}</b><b></b>`;
+
       const newEntry = await createJournalEntry({
         user_id: user.id,
-        content: journalText,
+        content: formattedContent,
         type: 'text',
         mood: selectedMood,
         tags: []
@@ -234,10 +260,13 @@ const Journal: React.FC = () => {
       // Upload audio file
       const audioUrl = await uploadAudioFile(user.id, audioBlob);
       
+      // Create properly formatted content for audio entries
+      const formattedContent = `<b>Audio Journal Entry</b><b></b><b>Audio recording captured</b><b>Listen to the full recording below.</b><b>Transcription will be available soon.</b>`;
+      
       // Create journal entry
       const newEntry = await createJournalEntry({
         user_id: user.id,
-        content: 'Audio journal entry',
+        content: formattedContent,
         type: 'audio',
         audio_url: audioUrl,
         mood: selectedMood,
@@ -457,14 +486,15 @@ const Journal: React.FC = () => {
               <div style={{ fontWeight: 700, color: '#A36456', fontSize: 16, marginBottom: 8 }}>{monthNames[parseInt(mostRecentKey.split('-')[1], 10)]} {mostRecentKey.split('-')[0]}</div>
               {grouped[mostRecentKey].map(entry => {
                 const expanded = expandedId === entry.id;
+                const parsedContent = parseEntryContent(entry.content);
                 return (
                   <div key={entry.id} style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', padding: '1rem', marginBottom: 16, cursor: 'pointer', transition: 'box-shadow 0.2s', position: 'relative' }}>
                     {/* Header with title, mood, timestamp, and icons */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-                        <div style={{ fontWeight: 700, color: '#311D00', fontSize: 17 }}>{entry.content.split('<b>')[1].split('</b>')[0]}</div>
-                        <span style={{ background: '#fff', color: moodColors[entry.mood || ''], border: `2px solid ${moodColors[entry.mood || '']}`, borderRadius: 8, fontSize: 13, fontWeight: 600, padding: '2px 10px' }}>
-                          {entry.mood?.replace(/\b\w/g, l => l.toUpperCase()) || ''}
+                        <div style={{ fontWeight: 700, color: '#311D00', fontSize: 17 }}>{parsedContent.title}</div>
+                        <span style={{ background: '#fff', color: moodColors[entry.mood || ''] || '#A36456', border: `2px solid ${moodColors[entry.mood || ''] || '#A36456'}`, borderRadius: 8, fontSize: 13, fontWeight: 600, padding: '2px 10px' }}>
+                          {entry.mood?.replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown'}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -479,11 +509,11 @@ const Journal: React.FC = () => {
                     </div>
                     
                     {/* Summary */}
-                    {entry.content.split('<b>')[2] && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: entry.content.split('<b>')[2] }} />}
+                    {parsedContent.summary && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }} dangerouslySetInnerHTML={{ __html: parsedContent.summary }} />}
                     
                     {/* Preview text (always shown) */}
                     <div style={{ color: '#311D00', fontSize: 15, marginBottom: 8, cursor: 'pointer' }} onClick={() => setExpandedId(expanded ? null : entry.id)}>
-                      {entry.content.split('<b>')[3]}
+                      {parsedContent.preview}
                     </div>
 
                     {/* Audio player for audio entries */}
@@ -505,10 +535,10 @@ const Journal: React.FC = () => {
                         {entry.type === 'audio' ? (
                           <>
                             <div style={{ fontWeight: 600, color: '#311D00', fontSize: 15, marginBottom: 8 }}>Transcription:</div>
-                            <div style={{ color: '#311D00', fontSize: 15 }}>{entry.content.split('<b>')[4]}</div>
+                            <div style={{ color: '#311D00', fontSize: 15 }}>{parsedContent.transcription || 'Transcription not available yet.'}</div>
                           </>
                         ) : (
-                          <div style={{ color: '#311D00', fontSize: 15 }}>{entry.content.split('<b>')[3]}</div>
+                          <div style={{ color: '#311D00', fontSize: 15 }}>{parsedContent.preview}</div>
                         )}
                         {/* Activities summary */}
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>

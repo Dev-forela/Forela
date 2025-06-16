@@ -241,6 +241,22 @@
   text-decoration: underline;
 }
 
+/* Spinner for loading states */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #E2B6A1;
+  border-top: 4px solid #A36456;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Responsive adjustments */
 @media (max-width: 600px) {
   .authPage {

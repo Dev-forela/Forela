@@ -5,6 +5,7 @@ import { BottomNavProvider } from './context/BottomNavContext';
 import { Layout } from './components/layout/Layout';
 import SignIn from './components/auth/SignIn';
 import SignUp from './components/auth/SignUp';
+import EmailConfirmation from './components/auth/EmailConfirmation';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Journal from './pages/Journal';
 import MyProfile from './pages/MyProfile';
@@ -22,6 +23,7 @@ const App: React.FC = () => {
             {/* Public routes */}
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/confirm-email" element={<EmailConfirmation />} />
 
             {/* Protected routes with Layout */}
             <Route
