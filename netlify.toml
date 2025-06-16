@@ -6,6 +6,9 @@
 [build.environment]
   NODE_VERSION = "20"
 
+[[plugins]]
+  package = "@netlify/plugin-functions-install-core"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
