@@ -56,7 +56,6 @@ export const Drawer: React.FC<DrawerProps> = ({ isOpen, onClose }) => {
     { label: 'Trends', icon: <LineChart size={20} />, shortcutKey: 'trends', onClick: () => { onClose(); navigate('/trends'); } },
     { label: 'Reports', icon: <FileText size={20} />, shortcutKey: 'reports', onClick: () => { onClose(); navigate('/'); } },
     { label: 'Medical History', icon: <BriefcaseMedical size={20} />, shortcutKey: 'medicalhistory', onClick: () => { onClose(); navigate('/'); } },
-    { label: 'Integrations', icon: <Link2 size={20} />, shortcutKey: 'integrations', onClick: () => { onClose(); navigate('/'); } },
     { label: 'Menu Scan', icon: <Scan size={20} />, shortcutKey: 'menuscan', onClick: () => { onClose(); navigate('/'); } },
   ];
 

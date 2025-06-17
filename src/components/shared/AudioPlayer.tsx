@@ -130,11 +130,12 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onDownload }
     const audio = audioRef.current;
     if (!audio) return;
 
-    const newVolume = parseFloat(e.target.value);
+    const newVolumePercent = parseFloat(e.target.value);
+    const newVolume = newVolumePercent / 100; // Convert 0-100 to 0-1
     audio.volume = newVolume;
     setVolume(newVolume);
-    setIsMuted(newVolume === 0);
-    setProgress(e.target, newVolume, 1);
+    setIsMuted(newVolumePercent === 0);
+    setProgress(e.target, newVolumePercent, 100);
   };
 
   const toggleMute = () => {
@@ -142,18 +143,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onDownload }
     if (!audio) return;
 
     if (isMuted) {
-      audio.volume = volume > 0 ? volume : 1;
+      const volumeToRestore = volume > 0 ? volume : 1;
+      audio.volume = volumeToRestore;
       setIsMuted(false);
       if (volumeRef.current) {
-        volumeRef.current.value = (volume > 0 ? volume : 1).toString();
-        setProgress(volumeRef.current, volume > 0 ? volume : 1, 1);
+        volumeRef.current.value = (volumeToRestore * 100).toString();
+        setProgress(volumeRef.current, volumeToRestore * 100, 100);
       }
     } else {
       audio.volume = 0;
       setIsMuted(true);
       if (volumeRef.current) {
         volumeRef.current.value = '0';
-        setProgress(volumeRef.current, 0, 1);
+        setProgress(volumeRef.current, 0, 100);
       }
     }
   };
@@ -281,7 +283,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onDownload }
           }}
           aria-label={isMuted ? 'Unmute' : 'Mute'}
         >
-          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          {isMuted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
         </button>
         
         <div style={{
@@ -304,9 +306,9 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onDownload }
             ref={volumeRef}
             type="range"
             min="0"
-            max="1"
-            value={isMuted ? 0 : volume}
-            step="0.1"
+            max="100"
+            value={isMuted ? 0 : Math.round(volume * 100)}
+            step="1"
             disabled={isLoading}
             onChange={handleVolumeChange}
             style={{

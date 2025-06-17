@@ -61,12 +61,26 @@ const monthNames = [
 const parseEntryContent = (content: string) => {
   if (!content) return { title: 'Untitled Entry', summary: '', preview: '', transcription: '' };
   
+  // Remove all HTML tags and clean up the content
+  const cleanContent = content.replace(/<\/?[^>]+(>|$)/g, '');
+  
+  // Try to parse structured content
   const parts = content.split('<b>');
+  if (parts.length > 1) {
+    return {
+      title: parts[1]?.split('</b>')[0]?.replace(/<\/?[^>]+(>|$)/g, '') || 'Untitled Entry',
+      summary: parts[2]?.replace(/<\/?[^>]+(>|$)/g, '') || '',
+      preview: parts[3]?.replace(/<\/?[^>]+(>|$)/g, '') || cleanContent.substring(0, 100) + (cleanContent.length > 100 ? '...' : ''),
+      transcription: parts[4]?.replace(/<\/?[^>]+(>|$)/g, '') || ''
+    };
+  }
+  
+  // Fallback for unstructured content
   return {
-    title: parts[1]?.split('</b>')[0] || 'Untitled Entry',
-    summary: parts[2] || '',
-    preview: parts[3] || content.substring(0, 100) + (content.length > 100 ? '...' : ''),
-    transcription: parts[4] || ''
+    title: 'Journal Entry',
+    summary: '',
+    preview: cleanContent.substring(0, 100) + (cleanContent.length > 100 ? '...' : ''),
+    transcription: ''
   };
 };
 
@@ -164,16 +178,28 @@ const Journal: React.FC = () => {
   };
 
   const handleDownload = (entry: JournalEntry) => {
-    const parsedContent = parseEntryContent(entry.content);
-    const downloadContent = `${parsedContent.title}\n\nDate: ${new Date(entry.created_at).toLocaleDateString()}\nMood: ${entry.mood || 'Not specified'}\nType: ${entry.type}\n\n${parsedContent.preview}\n\n${entry.type === 'audio' && parsedContent.transcription ? `Transcription:\n${parsedContent.transcription}` : ''}`;
-    
-    const element = document.createElement('a');
-    const file = new Blob([downloadContent], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = `journal-entry-${entry.created_at}.txt`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    if (entry.type === 'audio' && entry.audio_url) {
+      // Download the actual audio file
+      const element = document.createElement('a');
+      element.href = entry.audio_url;
+      element.download = `journal-audio-${new Date(entry.created_at).toISOString().split('T')[0]}.wav`;
+      element.target = '_blank';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    } else {
+      // Download text content as before
+      const parsedContent = parseEntryContent(entry.content);
+      const downloadContent = `${parsedContent.title}\n\nDate: ${new Date(entry.created_at).toLocaleDateString()}\nMood: ${entry.mood || 'Not specified'}\nType: ${entry.type}\n\n${parsedContent.preview}\n\n${entry.type === 'audio' && parsedContent.transcription ? `Transcription:\n${parsedContent.transcription}` : ''}`;
+      
+      const element = document.createElement('a');
+      const file = new Blob([downloadContent], { type: 'text/plain' });
+      element.href = URL.createObjectURL(file);
+      element.download = `journal-entry-${new Date(entry.created_at).toISOString().split('T')[0]}.txt`;
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
   };
 
   const handleCloseAudioOverlay = () => {
@@ -261,8 +287,11 @@ const Journal: React.FC = () => {
       // Upload audio file
       const audioUrl = await uploadAudioFile(user.id, audioBlob);
       
-      // Create properly formatted content for audio entries
-      const formattedContent = `<b>Audio Journal Entry</b><b></b><b>Audio recording captured</b><b>Listen to the full recording below.</b><b>Transcription will be available soon.</b>`;
+      // Create properly structured content for audio entries
+      const formattedContent = `<b>Audio Journal Entry</b>
+Audio recording from ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+Listen to the recording below for the full content.
+Transcription processing... Audio transcription will be available soon.`;
       
       // Create journal entry
       const newEntry = await createJournalEntry({
