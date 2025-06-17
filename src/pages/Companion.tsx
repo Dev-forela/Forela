@@ -215,7 +215,7 @@ const Companion: React.FC = () => {
   }
 
   return (
-    <div style={{ background: '#EAE9E5', minHeight: '100vh', display: 'flex', flexDirection: 'column', paddingBottom: 80 }}>
+    <div style={{ background: '#EAE9E5', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header with previous chats drawer toggle */}
       <div style={{ 
         background: '#fff', 
@@ -230,15 +230,13 @@ const Companion: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <Sparkles size={32} color="#A36456" />
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#311D00', margin: 0, fontFamily: 'Inter, Arial, Helvetica, sans-serif' }}>
-            Your Companion
+            Ela
           </h1>
         </div>
-
-
       </div>
 
       {/* Chat messages */}
-      <div style={{ flex: 1, padding: '1rem 1.5rem', overflowY: 'auto', marginTop: '80px' }}>
+      <div style={{ flex: 1, padding: '1rem 1.5rem', overflowY: 'auto', marginTop: '80px', marginBottom: '140px' }}>
         {messages.map(message => (
           <div
             key={message.id}
@@ -356,7 +354,12 @@ const Companion: React.FC = () => {
       <div style={{ 
         background: '#EAE9E5', 
         padding: '1rem 1.5rem',
-        borderTop: '1px solid #D9CFC2'
+        borderTop: '1px solid #D9CFC2',
+        position: 'fixed',
+        bottom: '80px',
+        left: 0,
+        right: 0,
+        zIndex: 20
       }}>
         <div style={{
           display: 'flex',

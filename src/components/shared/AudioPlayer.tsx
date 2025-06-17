@@ -22,7 +22,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onDownload }
 
   // Format time helper function
   const formatTime = (seconds: number): string => {
-    if (isNaN(seconds)) return '0:00';
+    if (isNaN(seconds) || !isFinite(seconds) || seconds < 0) return '0:00';
     
     const ss = Math.floor(seconds);
     const hh = Math.floor(ss / 3600);
@@ -182,16 +182,19 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, title, onDownload }
         onClick={togglePlayPause}
         disabled={isLoading}
         style={{
-          padding: 0,
+          padding: '8px',
           margin: 0,
-          background: 'transparent',
+          background: isPlaying ? '#8C5A51' : 'transparent',
           border: 'none',
+          borderRadius: '50%',
           cursor: isLoading ? 'not-allowed' : 'pointer',
           color: '#fff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          opacity: isLoading ? 0.5 : 1
+          opacity: isLoading ? 0.5 : 1,
+          transition: 'background-color 0.2s ease',
+          outline: 'none'
         }}
         aria-label={isPlaying ? 'Pause' : 'Play'}
       >

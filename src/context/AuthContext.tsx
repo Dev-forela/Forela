@@ -17,6 +17,8 @@ interface SignUpData {
   lastName: string;
   dateOfBirth: string;
   primaryCondition: 'Hashimotos' | 'Endometriosis' | 'Adenomyosis' | 'Other Autoimmune';
+  conditions?: string[];
+  helpAreas?: string[];
 }
 
 interface Profile {
@@ -64,10 +66,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('Starting sign up process for:', email);
       
-      // First, try to sign up the user
+      // Sign up the user with metadata
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            middle_name: userData.middleName,
+            date_of_birth: userData.dateOfBirth,
+            primary_condition: userData.primaryCondition,
+            conditions: userData.conditions || [userData.primaryCondition],
+            help_areas: userData.helpAreas || [],
+          }
+        }
       });
 
       if (authError) {
@@ -79,48 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error('No user returned from sign up');
       }
 
-      console.log('User created successfully:', authData.user.id);
+      console.log('User created successfully with metadata:', authData.user.id);
 
       // Check if we need to confirm email
       if (!authData.session) {
         throw new Error('Please check your email to confirm your account before signing in.');
       }
 
-      // Create profile
-      console.log('Creating profile for user:', authData.user.id);
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: authData.user.id,
-          first_name: userData.firstName,
-          middle_name: userData.middleName,
-          last_name: userData.lastName,
-          date_of_birth: userData.dateOfBirth,
-          email: email,
-        });
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        throw new Error(`Profile creation failed: ${profileError.message}`);
-      }
-
-      console.log('Profile created successfully');
-
-      // Create medical information
-      console.log('Creating medical information for user:', authData.user.id);
-      const { error: medicalError } = await supabase
-        .from('medical_information')
-        .insert({
-          user_id: authData.user.id,
-          primary_condition: userData.primaryCondition,
-        });
-
-      if (medicalError) {
-        console.error('Medical information creation error:', medicalError);
-        throw new Error(`Medical information creation failed: ${medicalError.message}`);
-      }
-
-      console.log('Medical information created successfully');
       console.log('Sign up process completed successfully');
 
     } catch (error) {

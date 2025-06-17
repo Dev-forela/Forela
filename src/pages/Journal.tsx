@@ -177,16 +177,28 @@ const Journal: React.FC = () => {
     }
   };
 
-  const handleDownload = (entry: JournalEntry) => {
+  const handleDownload = async (entry: JournalEntry) => {
     if (entry.type === 'audio' && entry.audio_url) {
-      // Download the actual audio file
-      const element = document.createElement('a');
-      element.href = entry.audio_url;
-      element.download = `journal-audio-${new Date(entry.created_at).toISOString().split('T')[0]}.wav`;
-      element.target = '_blank';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
+      try {
+        // Fetch the audio file and download it properly
+        const response = await fetch(entry.audio_url);
+        const blob = await response.blob();
+        
+        const element = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        element.href = url;
+        element.download = `journal-audio-${new Date(entry.created_at).toISOString().split('T')[0]}.wav`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        
+        // Clean up the object URL
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading audio file:', error);
+        // Fallback to direct link
+        window.open(entry.audio_url, '_blank');
+      }
     } else {
       // Download text content as before
       const parsedContent = parseEntryContent(entry.content);
@@ -366,9 +378,6 @@ Transcription processing... Audio transcription will be available soon.`;
         zIndex: 30
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ filter: 'brightness(0) saturate(100%) invert(10%) sepia(41%) saturate(582%) hue-rotate(24deg) brightness(98%) contrast(97%)' }}>
-            <img src={pencilLine} alt="Journal" style={{ width: 32, height: 32 }} />
-          </div>
           <h1 style={{ fontFamily: 'Inter, Arial, Helvetica, sans-serif', fontWeight: 700, fontSize: 24, color: '#311D00', margin: 0 }}>Journal</h1>
         </div>
       </div>
@@ -539,7 +548,7 @@ Transcription processing... Audio transcription will be available soon.`;
                     </div>
                     
                     {/* Summary */}
-                    {parsedContent.summary && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }}>{parsedContent.summary.replace(/<\/?b>/g, '')}</div>}
+                    {parsedContent.summary && <div style={{ color: '#A36456', fontSize: 14, marginBottom: 8 }}>{parsedContent.summary}</div>}
                     
                     {/* Preview text (always shown) */}
                     <div style={{ color: '#311D00', fontSize: 15, marginBottom: 8, cursor: 'pointer' }} onClick={() => setExpandedId(expanded ? null : entry.id)}>
