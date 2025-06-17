@@ -1,7 +1,5 @@
 /* CSS Variables for animated background */
 :root {
-  --hue-rotate: 0deg;
-  --pos-offset: 0;
   --move-1: linear-gradient(
     45deg,
     #1F3D2E,
@@ -34,51 +32,29 @@
   background: var(--move-1), var(--move-2), var(--move-3);
   background-blend-mode: multiply;
   background-size: 400% 400%;
-  animation: flow 55s cubic-bezier(0.4, 0.2, 0.3, 1) infinite,
-    hueShift 120s linear infinite,
-    jitter 15s -7.5s ease-in-out infinite alternate;
+  animation: flow 15s ease infinite;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+  /* GPU acceleration to reduce flickering */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 @keyframes flow {
   0% {
-    background-position: calc(100% * var(--pos-offset))
-        calc(50% * var(--pos-offset)),
-      calc(50% * var(--pos-offset)) calc(100% * var(--pos-offset)), 0% 100%;
+    background-position: 0% 50%, 50% 0%, 100% 50%;
   }
-  33% {
-    background-position: 100% 50%, 50% 100%, 100% 0%;
-  }
-  66% {
-    background-position: 50% 100%, 100% 50%, 0% 0%;
+  50% {
+    background-position: 100% 50%, 50% 100%, 0% 50%;
   }
   100% {
-    background-position: calc(100% * var(--pos-offset))
-        calc(50% * var(--pos-offset)),
-      calc(50% * var(--pos-offset)) calc(100% * var(--pos-offset)), 100% 100%;
+    background-position: 0% 50%, 50% 0%, 100% 50%;
   }
 }
 
-@keyframes hueShift {
-  0% {
-    filter: hue-rotate(var(--hue-rotate));
-  }
-  100% {
-    filter: hue-rotate(calc(360deg + var(--hue-rotate)));
-  }
-}
 
-@keyframes jitter {
-  0% {
-    background-size: 400% 400%, 380% 420%, 420% 380%;
-  }
-  100% {
-    background-size: 420% 380%, 400% 400%, 380% 420%;
-  }
-}
 
 /* Respect user's motion preferences */
 @media (prefers-reduced-motion: reduce) {
@@ -160,7 +136,7 @@
   background: rgba(255, 255, 255, 0.95);
   color: #000000;
   font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .formGroup input:focus,
@@ -193,7 +169,7 @@
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 }
 

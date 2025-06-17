@@ -22,10 +22,9 @@ const SignIn: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string>('');
 
-  // Initialize animation variables
+  // Initialize component
   useEffect(() => {
-    document.documentElement.style.setProperty('--hue-rotate', `${Math.random() * 360}deg`);
-    document.documentElement.style.setProperty('--pos-offset', Math.random().toString());
+    // Component initialization if needed
   }, []);
 
   const validateForm = (): boolean => {
