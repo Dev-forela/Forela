@@ -1,5 +1,6 @@
 const OpenAI = require('openai');
 
+// OpenAI client initialization for business account
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
