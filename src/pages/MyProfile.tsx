@@ -125,7 +125,7 @@ const movementData = {
 const mentalData = {
   title: 'Mental Health',
   percent: 0,
-  color: '#082026',
+                  color: '#635850',
   activities: [
     { 
       id: 10,
@@ -151,7 +151,7 @@ const mentalData = {
 const sleepData = {
   title: 'Sleep',
   percent: 0,
-  color: '#1E6E8B',
+                  color: '#9A9B89',
   activities: [
     { 
       id: 12,

@@ -24,7 +24,7 @@ const Trends: React.FC = () => {
   // Sample data
   const moodData: MoodData[] = [
     { mood: 'Excellent', count: 8, percentage: 25, color: '#4CB944' },
-    { mood: 'Very Good', count: 10, percentage: 31, color: '#1E6E8B' },
+    { mood: 'Very Good', count: 10, percentage: 31, color: '#9A9B89' },
     { mood: 'Average', count: 9, percentage: 28, color: '#A36456' },
     { mood: 'Bad', count: 4, percentage: 13, color: '#E2B6A1' },
     { mood: 'Very Poor', count: 1, percentage: 3, color: '#D99C8F' }
@@ -104,7 +104,7 @@ const Trends: React.FC = () => {
         {data.map((day, i) => (
           <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{
-              background: '#1E6E8B',
+              background: '#9A9B89',
               width: '100%',
               height: `${(day.hours / maxHours) * 80}px`,
               borderRadius: '4px 4px 0 0',
@@ -203,7 +203,7 @@ const Trends: React.FC = () => {
               key={timeframe}
               onClick={() => setSelectedTimeframe(timeframe)}
               style={{
-                background: selectedTimeframe === timeframe ? '#1E6E8B' : '#fff',
+                background: selectedTimeframe === timeframe ? '#9A9B89' : '#fff',
                 color: selectedTimeframe === timeframe ? '#fff' : '#6F5E53',
                 border: '1px solid #D9CFC2',
                 borderRadius: 8,
@@ -227,7 +227,7 @@ const Trends: React.FC = () => {
             textAlign: 'center',
             boxShadow: '0 2px 8px rgba(49,29,0,0.08)'
           }}>
-            <div style={{ color: '#1E6E8B', marginBottom: 8 }}>
+            <div style={{ color: '#9A9B89', marginBottom: 8 }}>
               <Moon size={24} />
             </div>
             <div style={{ fontSize: 24, fontWeight: 700, color: '#311D00' }}>
@@ -292,7 +292,7 @@ const Trends: React.FC = () => {
           unit="hours avg"
           subtitle="Daily sleep patterns"
           icon={<Moon size={24} />}
-          color="#1E6E8B"
+                        color="#9A9B89"
         >
           <SleepChart data={sleepDataWeek} />
         </MetricCard>

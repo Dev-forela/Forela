@@ -254,7 +254,7 @@ const Settings: React.FC = () => {
             setEditSection('profile');
             setShowEditProfile(true);
           },
-          color: '#1E6E8B'
+          color: '#9A9B89'
         },
         {
           id: 'password',
@@ -311,7 +311,7 @@ const Settings: React.FC = () => {
           type: 'toggle',
           value: notifications.weeklyReports,
           onToggle: handleNotificationToggle('weeklyReports'),
-          color: '#1E6E8B'
+          color: '#9A9B89'
         }
       ]
     },
@@ -336,7 +336,7 @@ const Settings: React.FC = () => {
           type: 'toggle',
           value: privacy.analytics,
           onToggle: handlePrivacyToggle('analytics'),
-          color: '#1E6E8B'
+          color: '#9A9B89'
         }
       ]
     },
@@ -371,7 +371,7 @@ const Settings: React.FC = () => {
           type: 'toggle',
           value: preferences.autoBackup,
           onToggle: handlePreferenceToggle('autoBackup'),
-          color: '#1E6E8B'
+          color: '#9A9B89'
         }
       ]
     },
@@ -489,7 +489,7 @@ const Settings: React.FC = () => {
           <ToggleSwitch 
             enabled={item.value || false} 
             onToggle={item.onToggle}
-            color={item.color || '#1E6E8B'}
+                            color={item.color || '#9A9B89'}
           />
         )}
         {(item.type === 'navigate' || item.type === 'action') && (
@@ -859,7 +859,7 @@ const Settings: React.FC = () => {
                 onClick={editSection === 'profile' ? handleSaveProfile : () => console.log('Change password')}
                 style={{
                   flex: 1,
-                  background: '#1E6E8B',
+                  background: '#9A9B89',
                   color: '#fff',
                   border: 'none',
                   borderRadius: 8,

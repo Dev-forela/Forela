@@ -35,7 +35,7 @@ const moodColors: Record<string, string> = {
   'very poor': '#D99C8F',
   'bad': '#E2B6A1',
   'average': '#A36456',
-  'very good': '#1E6E8B',
+  'very good': '#9A9B89',
   'excellent': '#4CB944',
 };
 
@@ -673,7 +673,7 @@ Transcription processing... Audio transcription will be available soon.`;
                 style={{ 
                   padding: 8, 
                   borderRadius: '50%',
-                  color: '#1E6E8B',
+                  color: '#9A9B89',
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
@@ -828,7 +828,7 @@ Transcription processing... Audio transcription will be available soon.`;
               </button>
               <button 
                 onClick={handleSaveTextEntry}
-                style={{ color: '#1E6E8B', background: 'transparent', border: 'none', padding: 8, borderRadius: '50%', cursor: 'pointer' }}
+                style={{ color: '#9A9B89', background: 'transparent', border: 'none', padding: 8, borderRadius: '50%', cursor: 'pointer' }}
                 aria-label="Save entry"
               >
                 <Save size={24} />
@@ -869,7 +869,7 @@ Transcription processing... Audio transcription will be available soon.`;
               transform: 'translateX(-50%)',
               padding: '0.75rem 2rem',
               borderRadius: 8,
-              background: '#1E6E8B',
+              background: '#9A9B89',
               color: '#fff',
               border: 'none',
               fontSize: '1.1rem',

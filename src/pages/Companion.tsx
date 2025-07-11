@@ -250,7 +250,7 @@ const Companion: React.FC = () => {
               maxWidth: '80%',
               padding: '12px 16px',
               borderRadius: 16,
-              background: message.sender === 'user' ? '#1E6E8B' : '#fff',
+              background: message.sender === 'user' ? '#DC7A63' : '#fff',
               color: message.sender === 'user' ? '#fff' : '#311D00',
               boxShadow: '0 2px 8px rgba(49,29,0,0.1)',
               fontSize: 15,
@@ -424,7 +424,7 @@ const Companion: React.FC = () => {
             onClick={handleSendMessage}
             disabled={!currentMessage.trim() || isLoading}
             style={{
-              background: (currentMessage.trim() && !isLoading) ? '#1E6E8B' : '#D9CFC2',
+              background: (currentMessage.trim() && !isLoading) ? '#DC7A63' : '#D9CFC2',
               border: 'none',
               cursor: (currentMessage.trim() && !isLoading) ? 'pointer' : 'not-allowed',
               padding: 8,

@@ -4,7 +4,7 @@
   left: 0;
   height: 100vh;
   width: 300px;
-  background: #311D00;
+  background: var(--color-nav);
   color: #FFFFFF;
   box-shadow: 2px 0 16px rgba(0,0,0,0.08);
   z-index: 9999;
@@ -43,12 +43,12 @@
   overflow-y: auto;
   scroll-behavior: smooth;
   scrollbar-width: thin;
-  scrollbar-color: #6F5E53 #311D00;
+  scrollbar-color: #6F5E53 var(--color-nav);
 }
 
 .nav::-webkit-scrollbar {
   width: 8px;
-  background: #311D00;
+  background: var(--color-nav);
 }
 
 .nav::-webkit-scrollbar-thumb {

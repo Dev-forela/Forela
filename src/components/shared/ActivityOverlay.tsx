@@ -82,7 +82,7 @@ const actionBtnStyle: React.CSSProperties = {
 
 const completeBtnStyle: React.CSSProperties = {
   ...actionBtnStyle,
-  background: '#082026',
+  background: '#635850',
 };
 
 const ActivityOverlay: React.FC<ActivityOverlayProps> = ({
