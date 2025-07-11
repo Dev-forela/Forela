@@ -3,6 +3,10 @@
   --color-background: #EAE9E5;
   --color-container: #FFFFFF;
   --color-nav: #724941;
+  --color-nav-hover: #F0BE9D;
+  --color-ember: #DC7A63;
+  --color-ember-hover: #F0BE9D;
+  --color-stone: #635850;
   --color-text-main: #311D00;
   --color-text-light: #FFFFFF;
   --color-icon-main: #311D00;
@@ -44,4 +48,25 @@
   --z-drawer: 50;
   --z-modal: 60;
   --z-tooltip: 70;
+}
+
+/* Button hover states */
+.action-btn:hover {
+  background: var(--color-ember-hover) !important;
+  color: var(--color-text-main) !important;
+}
+
+.complete-btn:hover {
+  background: var(--color-stone) !important;
+  opacity: 0.8;
+}
+
+.ember-btn:hover {
+  background: var(--color-ember-hover) !important;
+  color: var(--color-text-main) !important;
+}
+
+.nav-item:hover {
+  background: var(--color-nav-hover) !important;
+  color: var(--color-nav) !important;
 } 

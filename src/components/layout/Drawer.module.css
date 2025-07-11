@@ -92,7 +92,8 @@
 }
 
 .navLink:hover {
-  background: rgba(255,255,255,0.08);
+  background: var(--color-nav-hover);
+  color: var(--color-nav);
   border-radius: 8px;
 }
 
@@ -115,7 +116,7 @@
 
 .shortcutBtn:focus {
   outline: none;
-  background: rgba(255,255,255,0.08);
+  background: var(--color-nav-hover);
   border-radius: 50%;
 }
 

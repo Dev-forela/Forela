@@ -38,5 +38,5 @@
 }
 .journal-btn:hover,
 .journal-btn:active {
-  background: #6F5E53;
+  background: var(--color-stone);
 } 

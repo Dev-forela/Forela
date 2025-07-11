@@ -82,7 +82,7 @@ const actionBtnStyle: React.CSSProperties = {
 
 const completeBtnStyle: React.CSSProperties = {
   ...actionBtnStyle,
-  background: '#635850',
+  background: 'var(--color-stone)',
 };
 
 const ActivityOverlay: React.FC<ActivityOverlayProps> = ({
@@ -175,8 +175,8 @@ const ActivityOverlay: React.FC<ActivityOverlayProps> = ({
         </div>
         {/* Action buttons */}
         <div style={{ ...actionBarStyle, padding: '1.5rem 1.5rem 0.5rem 1.5rem' }}>
-          <button style={actionBtnStyle} onClick={onReplace}>Replace</button>
-          <button style={completeBtnStyle} onClick={onCompleteToggle}>
+          <button className="action-btn" style={actionBtnStyle} onClick={onReplace}>Replace</button>
+          <button className="complete-btn" style={completeBtnStyle} onClick={onCompleteToggle}>
             {isCompleted ? 'Completed' : 'Not Started'}
           </button>
         </div>
