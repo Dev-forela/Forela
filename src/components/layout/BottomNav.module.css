@@ -4,7 +4,8 @@
   right: 0;
   bottom: 0;
   height: 64px;
-  background: var(--color-nav);
+  background: #724941 !important;
+  background: var(--color-nav, #724941) !important;
   display: flex;
   justify-content: space-around;
   align-items: center;
