@@ -53,7 +53,7 @@ const helpOptions = [
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
+  const { signUp, resendConfirmationEmail } = useAuth();
   const [step, setStep] = useState(1);
   const [basicData, setBasicData] = useState<BasicFormData>(initialBasicData);
   const [conditionData, setConditionData] = useState<ConditionData>({ conditions: [] });
@@ -61,6 +61,8 @@ const SignUp: React.FC = () => {
   const [errors, setErrors] = useState<Partial<BasicFormData>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState<string>('');
+  const [isResendingEmail, setIsResendingEmail] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   // Initialize component
   useEffect(() => {
@@ -130,7 +132,7 @@ const SignUp: React.FC = () => {
     setGeneralError('');
     
     try {
-      await signUp(basicData.email, basicData.password, {
+      const result = await signUp(basicData.email, basicData.password, {
         firstName: basicData.firstName,
         middleName: basicData.middleName || undefined,
         lastName: basicData.lastName,
@@ -139,11 +141,16 @@ const SignUp: React.FC = () => {
         conditions: conditionData.conditions,
         helpAreas: helpData.helpAreas,
       });
+      
+      // Always go to step 4 (email confirmation screen)
       setStep(4);
-      // Auto close after 2 seconds
-      setTimeout(() => {
-        navigate('/profile');
-      }, 2000);
+      
+      // If no email confirmation needed, redirect to profile after a delay
+      if (!result.needsConfirmation) {
+        setTimeout(() => {
+          navigate('/profile');
+        }, 2000);
+      }
     } catch (error: any) {
       console.error('Error signing up:', error);
       
@@ -180,6 +187,26 @@ const SignUp: React.FC = () => {
         ? prev.helpAreas.filter(h => h !== helpArea)
         : [...prev.helpAreas, helpArea]
     }));
+  };
+
+  const handleResendEmail = async () => {
+    setIsResendingEmail(true);
+    setResendSuccess(false);
+    
+    try {
+      await resendConfirmationEmail(basicData.email);
+      setResendSuccess(true);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setResendSuccess(false);
+      }, 3000);
+    } catch (error: any) {
+      console.error('Error resending confirmation email:', error);
+      setGeneralError(error.message || 'Failed to resend confirmation email. Please try again.');
+    } finally {
+      setIsResendingEmail(false);
+    }
   };
 
   const renderStep1 = () => (
@@ -428,16 +455,106 @@ const SignUp: React.FC = () => {
         border: '2px solid #A36456', 
         borderRadius: '12px', 
         padding: '2rem',
-        marginBottom: '1rem'
+        marginBottom: '2rem'
       }}>
-        <h2 style={{ color: '#311D00', marginBottom: '1rem' }}>Thanks for signing up for Forela!</h2>
-        <p style={{ color: '#6F5E53', lineHeight: 1.6 }}>
-          You should receive a confirmation email in the next few minutes. 
-          Please contact <strong>hello@forela.health</strong> if you experience any issues.
-        </p>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ 
+            fontSize: '3rem', 
+            marginBottom: '1rem',
+            filter: 'hue-rotate(25deg)'
+          }}>🎉</div>
+          <h2 style={{ color: '#311D00', marginBottom: '1rem', fontSize: '1.5rem' }}>
+            Congratulations! Welcome to Forela!
+          </h2>
+        </div>
+        
+        <div style={{ 
+          backgroundColor: '#fff',
+          border: '1px solid #D9CFC2',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '1.5rem'
+        }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <span style={{ fontSize: '1.5rem', marginBottom: '0.5rem', display: 'block' }}>📧</span>
+            <p style={{ color: '#311D00', fontWeight: '600', marginBottom: '0.5rem' }}>
+              Please check your email
+            </p>
+            <p style={{ color: '#6F5E53', lineHeight: 1.6, fontSize: '0.9rem' }}>
+              We've sent a confirmation email to <strong>{basicData.email}</strong>
+            </p>
+          </div>
+          
+          <div style={{ 
+            backgroundColor: '#F8F5F2',
+            border: '1px solid #E2B6A1',
+            borderRadius: '6px',
+            padding: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <p style={{ color: '#8C5A51', margin: 0, fontSize: '0.85rem' }}>
+              ⏰ You should receive it within <strong>2-5 minutes</strong>
+            </p>
+          </div>
+          
+          <p style={{ color: '#6F5E53', fontSize: '0.85rem', lineHeight: 1.5 }}>
+            Click the confirmation link in the email to activate your account and start your wellness journey.
+          </p>
+        </div>
+
+        {resendSuccess && (
+          <div style={{ 
+            backgroundColor: '#E8F5E8',
+            border: '1px solid #4CB944',
+            borderRadius: '6px',
+            padding: '0.75rem',
+            marginBottom: '1rem'
+          }}>
+            <p style={{ color: '#2E7D32', margin: 0, fontSize: '0.9rem' }}>
+              ✅ Confirmation email sent successfully!
+            </p>
+          </div>
+        )}
+        
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <button
+            onClick={handleResendEmail}
+            disabled={isResendingEmail}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: '2px solid #A36456',
+              borderRadius: '8px',
+              backgroundColor: '#fff',
+              color: '#A36456',
+              fontWeight: '600',
+              cursor: isResendingEmail ? 'not-allowed' : 'pointer',
+              opacity: isResendingEmail ? 0.6 : 1,
+              fontSize: '0.9rem'
+            }}
+          >
+            {isResendingEmail ? 'Sending...' : 'Resend Email'}
+          </button>
+          
+          <button
+            onClick={() => navigate('/signin')}
+            style={{
+              padding: '0.75rem 1.5rem',
+              border: 'none',
+              borderRadius: '8px',
+              backgroundColor: '#A36456',
+              color: '#fff',
+              fontWeight: '600',
+              cursor: 'pointer',
+              fontSize: '0.9rem'
+            }}
+          >
+            Return to Login
+          </button>
+        </div>
       </div>
-      <p style={{ fontSize: '0.9rem', color: '#A36456' }}>
-        Redirecting you to your profile...
+      
+      <p style={{ fontSize: '0.8rem', color: '#6F5E53', lineHeight: 1.5 }}>
+        Having trouble? Contact us at <strong>hello@forela.health</strong>
       </p>
     </div>
   );

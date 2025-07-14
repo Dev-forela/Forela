@@ -5,10 +5,11 @@ import { User } from '@supabase/supabase-js';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, userData: SignUpData) => Promise<void>;
+  signUp: (email: string, password: string, userData: SignUpData) => Promise<{ needsConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<void>;
 }
 
 interface SignUpData {
@@ -95,14 +96,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('User created successfully with metadata:', authData.user.id);
 
       // Check if we need to confirm email
-      if (!authData.session) {
-        throw new Error('Please check your email to confirm your account before signing in.');
-      }
+      const needsConfirmation = !authData.session;
+      console.log('Sign up process completed successfully, needs confirmation:', needsConfirmation);
 
-      console.log('Sign up process completed successfully');
+      return { needsConfirmation };
 
     } catch (error) {
       console.error('Error in signUp function:', error);
+      throw error;
+    }
+  };
+
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      console.log('Resending confirmation email for:', email);
+      
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
+      });
+
+      if (error) {
+        console.error('Error resending confirmation email:', error);
+        throw new Error(`Failed to resend confirmation email: ${error.message}`);
+      }
+
+      console.log('Confirmation email resent successfully');
+    } catch (error) {
+      console.error('Error in resendConfirmationEmail function:', error);
       throw error;
     }
   };
@@ -174,6 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     updateProfile,
+    resendConfirmationEmail,
   };
 
   return (
